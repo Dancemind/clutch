@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <include file="migrations/001-create-clutch-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/002-create-metadata-tables.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/003-create-forms-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/004-add-deleted-at-column-to-metadata-forms-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/005-create-audit-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/006-clutch-jsonb-default-value.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

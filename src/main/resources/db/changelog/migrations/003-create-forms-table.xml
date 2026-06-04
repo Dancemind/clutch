@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260129-03" author="Gem">
+        <createTable tableName="forms">
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(512)"/>
+            <column name="is_active" type="BOOLEAN" defaultValue="true"/>
+
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+        </createTable>
+
+        <!-- clutch to forms foreign key -->
+        <addForeignKeyConstraint baseTableName="clutch"
+                                 baseColumnNames="form_uuid"
+                                 constraintName="fk_form_clutch"
+                                 referencedTableName="forms"
+                                 referencedColumnNames="uuid"
+                                 onDelete="CASCADE"/>
+
+        <!-- form_columns to forms foreign key -->
+        <addForeignKeyConstraint baseTableName="form_columns"
+                                 baseColumnNames="form_uuid"
+                                 constraintName="fk_form_form_col"
+                                 referencedTableName="forms"
+                                 referencedColumnNames="uuid"
+                                 onDelete="CASCADE"/>
+
+        <!-- validation_rules to forms foreign key -->
+        <addForeignKeyConstraint baseTableName="validation_rules"
+                                 baseColumnNames="form_uuid"
+                                 constraintName="fk_form_val_rul"
+                                 referencedTableName="forms"
+                                 referencedColumnNames="uuid"
+                                 onDelete="CASCADE"/>
+
+
+
+    </changeSet>
+
+</databaseChangeLog>

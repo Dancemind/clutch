@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260129-02" author="Gem">
+        <createTable tableName="form_columns">
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="form_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_key" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_column" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="field_type" type="VARCHAR(32)"/>
+            <column name="order_number" type="INTEGER"/>
+
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+        </createTable>
+
+        <createTable tableName="validation_rules">
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="form_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_column" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_value" type="VARCHAR(255)"/>
+            <column name="message" type="VARCHAR(255)"/>
+
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+        </createTable>
+
+        <createIndex tableName="form_columns" indexName="idx_form_columns_form_uuid">
+            <column name="form_uuid"/>
+        </createIndex>
+        <createIndex tableName="validation_rules" indexName="idx_val_rules_form_uuid">
+            <column name="form_uuid"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

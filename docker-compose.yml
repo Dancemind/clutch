@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+
+  db:
+    image: postgres:17.6-alpine
+    container_name: clutch_db
+    environment:
+      POSTGRES_USER: cluser
+      POSTGRES_PASSWORD: cluser
+      POSTGRES_DB: clutch_db
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:8.0.5-alpine
+    container_name: clutch_redis
+    ports:
+      - "6379:6379"

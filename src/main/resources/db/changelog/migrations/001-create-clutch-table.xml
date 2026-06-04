@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260128-01" author="Gem">
+        <createTable tableName="clutch">
+            <!-- BaseEntity & System fields -->
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="form_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_number" type="BIGINT"/>
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+
+            <!-- MONEY / DECIMAL (10) -->
+            <column name="d_1" type="NUMERIC(19,4)"/>
+            <column name="d_2" type="NUMERIC(19,4)"/>
+            <column name="d_3" type="NUMERIC(19,4)"/>
+            <column name="d_4" type="NUMERIC(19,4)"/>
+            <column name="d_5" type="NUMERIC(19,4)"/>
+            <column name="d_6" type="NUMERIC(19,4)"/>
+            <column name="d_7" type="NUMERIC(19,4)"/>
+            <column name="d_8" type="NUMERIC(19,4)"/>
+            <column name="d_9" type="NUMERIC(19,4)"/>
+            <column name="d_10" type="NUMERIC(19,4)"/>
+
+            <!-- TIMESTAMPS (10) -->
+            <column name="t_1" type="TIMESTAMP"/>
+            <column name="t_2" type="TIMESTAMP"/>
+            <column name="t_3" type="TIMESTAMP"/>
+            <column name="t_4" type="TIMESTAMP"/>
+            <column name="t_5" type="TIMESTAMP"/>
+            <column name="t_6" type="TIMESTAMP"/>
+            <column name="t_7" type="TIMESTAMP"/>
+            <column name="t_8" type="TIMESTAMP"/>
+            <column name="t_9" type="TIMESTAMP"/>
+            <column name="t_10" type="TIMESTAMP"/>
+
+            <!-- LINKS / UUID (8) -->
+            <column name="l_1" type="UUID"/>
+            <column name="l_2" type="UUID"/>
+            <column name="l_3" type="UUID"/>
+            <column name="l_4" type="UUID"/>
+            <column name="l_5" type="UUID"/>
+            <column name="l_6" type="UUID"/>
+            <column name="l_7" type="UUID"/>
+            <column name="l_8" type="UUID"/>
+
+            <!-- BUSINESS IDs (7) -->
+            <column name="id_1" type="VARCHAR(128)"/>
+            <column name="id_2" type="VARCHAR(128)"/>
+            <column name="id_3" type="VARCHAR(128)"/>
+            <column name="id_4" type="VARCHAR(128)"/>
+            <column name="id_5" type="VARCHAR(128)"/>
+            <column name="id_6" type="VARCHAR(128)"/>
+            <column name="id_7" type="VARCHAR(128)"/>
+
+            <!-- SHORT TEXT (10) -->
+            <column name="s_1" type="VARCHAR(255)"/>
+            <column name="s_2" type="VARCHAR(255)"/>
+            <column name="s_3" type="VARCHAR(255)"/>
+            <column name="s_4" type="VARCHAR(255)"/>
+            <column name="s_5" type="VARCHAR(255)"/>
+            <column name="s_6" type="VARCHAR(255)"/>
+            <column name="s_7" type="VARCHAR(255)"/>
+            <column name="s_8" type="VARCHAR(255)"/>
+            <column name="s_9" type="VARCHAR(255)"/>
+            <column name="s_10" type="VARCHAR(255)"/>
+
+            <!-- LONG TEXT (5) -->
+            <column name="txt_1" type="TEXT"/>
+            <column name="txt_2" type="TEXT"/>
+            <column name="txt_3" type="TEXT"/>
+            <column name="txt_4" type="TEXT"/>
+            <column name="txt_5" type="TEXT"/>
+
+            <!-- BOOLEAN (10) -->
+            <column name="b_1" type="BOOLEAN"/>
+            <column name="b_2" type="BOOLEAN"/>
+            <column name="b_3" type="BOOLEAN"/>
+            <column name="b_4" type="BOOLEAN"/>
+            <column name="b_5" type="BOOLEAN"/>
+            <column name="b_6" type="BOOLEAN"/>
+            <column name="b_7" type="BOOLEAN"/>
+            <column name="b_8" type="BOOLEAN"/>
+            <column name="b_9" type="BOOLEAN"/>
+            <column name="b_10" type="BOOLEAN"/>
+
+            <!-- COLUMN for extra data-->
+            <column name="extra_data" type="JSONB"/>
+        </createTable>
+
+        <createIndex tableName="clutch" indexName="idx_clutch_lookup">
+            <column name="company_uuid"/>
+            <column name="form_uuid"/>
+        </createIndex>
+
+    </changeSet>
+</databaseChangeLog>
