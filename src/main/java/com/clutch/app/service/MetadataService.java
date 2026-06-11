@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MetadataService {
 
+    public static final String NOT_FOUND_MSG = "Form is not found";
+
     private final ColumnDefinitionRepository columnRepository;
     private final ValidationRuleRepository ruleRepository;
     private final FormMetadataRepository formMetadataRepository;
@@ -26,16 +28,12 @@ public class MetadataService {
         return columnRepository.findAllByFormUuid(formUuid);
     }
 
-    // Кэшируем маппинг по formId. При изменении формы — делаем CacheEvict.
     @Cacheable(value = "formColumnIdTargetColumn", key = "#formUuid")
     public Map<UUID, String> getIdToTargetColumnMapping(UUID formUuid) {
-        // 1. Проверяем, существует ли форма и не удалена ли она
-        // findById вернет Empty, если форма в корзине
-        // todo: может проверить isExist, чтобы различать удалена форма или такого айди не существует?
+        // todo: separate form deleted and form never existed
         formMetadataRepository.findById(formUuid)
-                .orElseThrow(() -> new EntityNotFoundException("Форма не найдена или находится в корзине"));
+                .orElseThrow(() -> new EntityNotFoundException(NOT_FOUND_MSG));
 
-        // 2. Если форма не удалена, возвращаем маппинг колонок
         return columnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUuid,
@@ -43,15 +41,12 @@ public class MetadataService {
                 ));
     }
 
-    // Кэшируем маппинг по formId. При изменении формы — делаем CacheEvict.
     @Cacheable(value = "formUserKeyColumnId", key = "#formUuid")
     public Map<String, UUID> getUserKeyToColumnIdMapping(UUID formUuid) {
-        // 1. Проверяем, существует ли форма и не удалена ли она
-        // todo: различать удалена форма или такого айди не существует
+        // todo: separate form deleted and form never existed
         formMetadataRepository.findById(formUuid)
-                .orElseThrow(() -> new EntityNotFoundException("Форма не найдена или находится в корзине"));
+                .orElseThrow(() -> new EntityNotFoundException(NOT_FOUND_MSG));
 
-        // 2. Если форма не удалена, возвращаем маппинг колонок
         return columnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUserKey,
@@ -59,7 +54,6 @@ public class MetadataService {
                 ));
     }
 
-    // Кэшируем маппинг по formId. При изменении формы — делаем CacheEvict.
     @Cacheable(value = "formColumnTargetColumnId", key = "#formUuid")
     public Map<String, UUID> getTargetColumnToIdMapping(UUID formUuid) {
         return columnRepository.findAllByFormUuid(formUuid).stream()
@@ -68,15 +62,6 @@ public class MetadataService {
                         FormColumn::getUuid
                 ));
     }
-
-//    @Cacheable(value = "formColumnIdUserKey", key = "#formUuid")
-//    public Map<UUID, String> getIdToUserColumnNameMapping(UUID formUuid) {
-//        return columnRepository.findAllByFormUuid(formUuid).stream()
-//                .collect(Collectors.toMap(
-//                        FormColumn::getUuid,
-//                        FormColumn::getUserKey
-//                ));
-//    }
 
     @Cacheable(value = "formRules", key = "#formUuid")
     public List<ValidationRule> getValidationRules(UUID formUuid) {

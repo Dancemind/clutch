@@ -3,53 +3,45 @@ spring:
     name: app
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      enabled: true
+      max-file-size: 30MB
+      max-request-size: 35MB
+      file-size-threshold: 2MB   # up to 2MB files in-RAM processing, don't save to disk
 
-  # Включаем виртуальные потоки (Project Loom)
   threads:
     virtual:
       enabled: true
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:clue_db}
-    username: ${DB_USER:cluser}
-    password: ${DB_PASS:cluser}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}
     driver-class-name: org.postgresql.Driver
 
     hikari:
-      # Оптимизация для высоконагруженных систем
       pool-name: ClutchHikariPool
-      maximum-pool-size: 20 # Для виртуальных потоков не нужно слишком много, лучше качественный тюнинг
+      maximum-pool-size: 20
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 20000
       max-lifetime: 1200000
-      # Важно для надежности транзакций
+
       auto-commit: false
 
   jpa:
-    open-in-view: false # Архитекторский must-have: защищает от LazyInitializationException в контроллерах
+    open-in-view: false # controller LazyInitializationException protection
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate # Только валидация, миграции доверяем Liquibase
+      ddl-auto: validate # validate only, migrations via Liquibase
     properties:
       hibernate:
-        # Магия Multi-tenancy
         multiTenancy: DISCRIMINATOR
-
-        # Указываем Hibernate, кто будет поставлять текущий ID компании
         tenant_identifier_resolver: com.clutch.app.config.TenantIdentifierResolver
 
-        # Оптимизация пакетной вставки (batching) — критично для импорта данных
-        jdbc.batch_size: 50
-        order_inserts: true
-        order_updates: true
+#        jdbc.batch_size: 50
+#        order_inserts: true
+#        order_updates: true
 
-        # Форматирование SQL для удобства отладки в dev-режиме
-        format_sql: true
-
-  # Настройка миграций
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
@@ -57,7 +49,7 @@ spring:
 
   cache:
     type: redis
-    time-to-live: 3600s # 1 час, если метаданные не менялись
+    time-to-live: 3600s # 1 hour
     cache-null-values: false
   data:
     redis:
@@ -76,16 +68,11 @@ clutch:
 springdoc:
   api-docs:
     path: /v3/api-docs
-    # OpenAPI 3.1 для корректной валидации JSONB-схем
+    # OpenAPI 3.1 JSONB-schema validation
     version: openapi_3_1
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-  # Включаем Scalar UI
   scalar:
     enabled: true
     path: /scalar
-
-#logging:
-#  level:
-#    org.springframework.jdbc.core.JdbcTemplate: DEBUG

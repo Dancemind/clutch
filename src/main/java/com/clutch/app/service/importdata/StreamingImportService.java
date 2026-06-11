@@ -7,24 +7,34 @@ import com.opencsv.exceptions.CsvValidationException;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class StreamingImportService {
 
+    private static final int BATCH_SIZE = 500;
+    private static final int ROW_CACHE_SIZE = 100;
+
     private final BulkImportService bulkImportService;
     private final NotificationService notificationService;
 
-    public void processCsv(UUID formId, String importId, MultipartFile file) throws ValidationException, CsvValidationException, IOException {
-        try (var reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+    public void processCsv(UUID formId, String importId, InputStream inputStream)
+            throws ValidationException, CsvValidationException, IOException {
+        try (var reader = new CSVReader(new InputStreamReader(inputStream))) {
 
             List<String> columnNames = new ArrayList<>();
             String[] headers;
@@ -47,34 +57,27 @@ public class StreamingImportService {
                 return;
             }
             processInBatches(formId, importId, columnNames, initColumn, reader.iterator());
-        } catch (Exception e) {
-            // Логируем для админа
-            log.error("Ошибка при импорте CSV (ID: {}): {}", importId, e.getMessage());
-
-            // Отправляем пользователю
-            notificationService.sendError(importId, "Ошибка парсинга: " + e.getMessage());
-            throw e;
+        } catch (Exception exception) {
+            log.error("Ошибка при импорте CSV (ID: {}): {}", importId, exception.getMessage());
+            notificationService.sendError(importId, "Ошибка парсинга: " + exception.getMessage());
+            throw exception;
         }
     }
 
-    public void processExcel(UUID formId, String importId, MultipartFile file) {
-        try (var is = file.getInputStream();
-             var workbook = StreamingReader.builder().rowCacheSize(100).open(is)) {
+    public void processExcel(UUID formId, String importId, InputStream is) {
+        try (var workbook = StreamingReader.builder().rowCacheSize(ROW_CACHE_SIZE).open(is)) {
 
             var sheet = workbook.getSheetAt(0);
             var rowIterator = sheet.iterator();
             if (!rowIterator.hasNext()) return;
 
-            // Читаем заголовки из первой строки
             Row headerRow = rowIterator.next();
             int initColumn = 0;
-//            String[] headers = new String[headerRow.getLastCellNum()];
             List<String> headers = new ArrayList<>();
             for (int i = 0; i < headerRow.getLastCellNum(); i++) {
                 headers.add(headerRow.getCell(i).getStringCellValue());
             }
 
-            // todo: fix initColumn value, find where headers line starts
             processInBatches(formId, importId, headers, initColumn, rowIterator);
         } catch (Exception e) {
             notificationService.sendError(importId, e.getMessage());
@@ -95,15 +98,15 @@ public class StreamingImportService {
             batch.add(rowMap);
             processed++;
 
-            if (batch.size() >= 500) {
-                bulkImportService.importData(formId, batch); // Вставка в БД
-                notificationService.sendProgress(importId, processed, 0); // 0 если total неизвестен
+            if (batch.size() >= BATCH_SIZE) {
+                bulkImportService.importDataPgCopy(formId, batch);
+                notificationService.sendProgress(importId, processed, 0); // 0 for total unknown
                 batch.clear();
             }
         }
 
         if (!batch.isEmpty()) {
-            bulkImportService.importData(formId, batch);
+            bulkImportService.importDataPgCopy(formId, batch);
         }
         notificationService.sendComplete(importId);
     }
