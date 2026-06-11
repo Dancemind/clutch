@@ -53,13 +53,13 @@ public class StreamingImportService {
                 }
             }
             if (!headersFound) {
-                notificationService.sendError(importId, "Файл пуст");
+                notificationService.sendError(importId, "Empty file");
                 return;
             }
             processInBatches(formId, importId, columnNames, initColumn, reader.iterator());
         } catch (Exception exception) {
-            log.error("Ошибка при импорте CSV (ID: {}): {}", importId, exception.getMessage());
-            notificationService.sendError(importId, "Ошибка парсинга: " + exception.getMessage());
+            log.error("Import error - CSV (ID: {}): {}", importId, exception.getMessage());
+            notificationService.sendError(importId, "Data parsing error: " + exception.getMessage());
             throw exception;
         }
     }

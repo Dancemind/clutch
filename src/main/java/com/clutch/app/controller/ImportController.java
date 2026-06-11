@@ -62,7 +62,7 @@ public class ImportController {
                 });
                 log.info("Import :: completed. File: " + file.getOriginalFilename());
             } catch (Exception e) {
-                notificationService.sendError(importId, "Критическая ошибка системы: " + e.getMessage());
+                notificationService.sendError(importId, "Import error: " + e.getMessage());
             }
         });
 
