@@ -1,6 +1,7 @@
 package com.clutch.app.service.importdata;
 
-import com.clutch.app.service.notification.NotificationService;
+import com.clutch.app.config.TenantContext;
+import com.clutch.app.service.notification.SseNotificationService;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -30,7 +33,37 @@ public class StreamingImportService {
     private static final int ROW_CACHE_SIZE = 100;
 
     private final BulkImportService bulkImportService;
-    private final NotificationService notificationService;
+    private final SseNotificationService sseNotificationService;
+
+    public String importFile(UUID formId, MultipartFile file) throws IOException {
+        log.info("Import :: started. File: " + file.getOriginalFilename());
+
+        String importId = UUID.randomUUID().toString();
+        UUID companyId = TenantContext.get();
+
+        InputStream inputStream = file.getInputStream();
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                ScopedValue.where(TenantContext.COMPANY_UUID, companyId).run(() -> {
+                    if (Objects.requireNonNull(file.getOriginalFilename()).endsWith(".csv")) {
+                        try {
+                            processCsv(formId, importId, inputStream);
+                        } catch (ValidationException | CsvValidationException | IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        processExcel(formId, importId, inputStream);
+                    }
+                });
+                log.info("Import :: completed. File: " + file.getOriginalFilename());
+            } catch (Exception e) {
+                sseNotificationService.sendError(importId, "Import error: " + e.getMessage());
+            }
+        });
+
+        return importId;
+    }
 
     public void processCsv(UUID formId, String importId, InputStream inputStream)
             throws ValidationException, CsvValidationException, IOException {
@@ -53,13 +86,13 @@ public class StreamingImportService {
                 }
             }
             if (!headersFound) {
-                notificationService.sendError(importId, "Empty file");
+                sseNotificationService.sendError(importId, "Empty file");
                 return;
             }
             processInBatches(formId, importId, columnNames, initColumn, reader.iterator());
         } catch (Exception exception) {
             log.error("Import error - CSV (ID: {}): {}", importId, exception.getMessage());
-            notificationService.sendError(importId, "Data parsing error: " + exception.getMessage());
+            sseNotificationService.sendError(importId, "Data parsing error: " + exception.getMessage());
             throw exception;
         }
     }
@@ -80,7 +113,7 @@ public class StreamingImportService {
 
             processInBatches(formId, importId, headers, initColumn, rowIterator);
         } catch (Exception e) {
-            notificationService.sendError(importId, e.getMessage());
+            sseNotificationService.sendError(importId, e.getMessage());
         }
     }
 
@@ -100,7 +133,7 @@ public class StreamingImportService {
 
             if (batch.size() >= BATCH_SIZE) {
                 bulkImportService.importDataPgCopy(formId, batch);
-                notificationService.sendProgress(importId, processed, 0); // 0 for total unknown
+                sseNotificationService.sendProgress(importId, processed, 0); // 0 for total unknown
                 batch.clear();
             }
         }
@@ -108,7 +141,7 @@ public class StreamingImportService {
         if (!batch.isEmpty()) {
             bulkImportService.importDataPgCopy(formId, batch);
         }
-        notificationService.sendComplete(importId);
+        sseNotificationService.sendComplete(importId);
     }
 
     private Map<String, Object> mapCsvToMap(List<String> headers, int initColumn, String[] row) {

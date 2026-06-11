@@ -8,13 +8,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class NotificationService {
+public class SseNotificationService {
 
-    // Храним эмиттеры
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public SseEmitter createEmitter(String importId) {
-        SseEmitter emitter = new SseEmitter(600_000L); // 10 минут таймаут
+        SseEmitter emitter = new SseEmitter(600_000L); // 10 minutes
 
         emitter.onCompletion(() -> emitters.remove(importId));
         emitter.onTimeout(() -> emitters.remove(importId));
@@ -55,9 +54,9 @@ public class NotificationService {
                 emitter.send(SseEmitter.event()
                         .name("error")
                         .data(Map.of("message", errorMessage, "timestamp", Instant.now())));
-                emitter.complete(); // Закрываем соединение после ошибки
+                emitter.complete(); // close connection
             } catch (IOException ignored) {
-                // Клиент уже мог отвалиться
+                // probably connection closed already
             } finally {
                 emitters.remove(importId);
             }
