@@ -1,4 +1,6 @@
 package com.clutch.app.dto;
 
-public record FieldDto(String fieldId, Object value) {
+import java.util.UUID;
+
+public record FieldDto(UUID id, Object value) {
 }

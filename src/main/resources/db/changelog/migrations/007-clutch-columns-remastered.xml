@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260621-01" author="Sas">
+
+        <addColumn tableName="clutch">
+
+            <column name="txt_6" type="TEXT"/>
+            <column name="txt_7" type="TEXT"/>
+            <column name="txt_8" type="TEXT"/>
+            <column name="txt_9" type="TEXT"/>
+            <column name="txt_10" type="TEXT"/>
+            <column name="txt_11" type="TEXT"/>
+            <column name="txt_12" type="TEXT"/>
+            <column name="txt_13" type="TEXT"/>
+            <column name="txt_14" type="TEXT"/>
+            <column name="txt_15" type="TEXT"/>
+
+            <column name="n_1" type="FLOAT8"/>
+            <column name="n_2" type="FLOAT8"/>
+            <column name="n_3" type="FLOAT8"/>
+            <column name="n_4" type="FLOAT8"/>
+
+        </addColumn>
+
+
+        <dropColumn tableName="clutch">
+
+            <column name="d_5"/>
+            <column name="d_6"/>
+            <column name="d_7"/>
+            <column name="d_8"/>
+            <column name="d_9"/>
+            <column name="d_10"/>
+
+            <column name="t_6"/>
+            <column name="t_7"/>
+            <column name="t_8"/>
+            <column name="t_9"/>
+            <column name="t_10"/>
+
+            <column name="l_6"/>
+            <column name="l_7"/>
+            <column name="l_8"/>
+
+            <column name="id_6"/>
+            <column name="id_7"/>
+
+            <column name="s_1"/>
+            <column name="s_2"/>
+            <column name="s_3"/>
+            <column name="s_4"/>
+            <column name="s_5"/>
+            <column name="s_6"/>
+            <column name="s_7"/>
+            <column name="s_8"/>
+            <column name="s_9"/>
+            <column name="s_10"/>
+
+            <column name="b_6"/>
+            <column name="b_7"/>
+            <column name="b_8"/>
+            <column name="b_9"/>
+            <column name="b_10"/>
+
+        </dropColumn>
+
+    </changeSet>
+</databaseChangeLog>

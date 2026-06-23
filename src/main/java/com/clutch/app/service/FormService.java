@@ -2,6 +2,7 @@ package com.clutch.app.service;
 
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.dto.FormField;
+import com.clutch.app.dto.FormFieldDto;
 import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.entity.Form;
 import com.clutch.app.entity.FormColumn;
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class FormService {
 
-    // Лимит таблиц на одну компанию (берем из application.yml)
+    // max forms/tables per one company
     @Value("${clutch.quotas.max-forms:10}")
     private int maxFormsQuota;
 
@@ -35,37 +36,37 @@ public class FormService {
 
     @Transactional
 //    @CacheEvict(value = "formDefinitions", key = "#resultId") // Инвалидация кэша при создании/обновлении
-    public FormMetadataDto createForm(String name, String description, List<FormField> fields) {
+    public FormMetadataDto createForm(String name, String description, List<FormFieldDto> fields) {
         // checks if quota on create table is exceeded for the company
         checkQuota();
 
-        // 1. Создаем заголовок формы
+        // 1. create form
         Form form = Form.builder()
                 .name(name)
                 .description(description)
                 .build();
-        Form formSaved = formMetadataRepository.save(form); // Здесь проставится ID и company_id
+        Form formSaved = formMetadataRepository.save(form);
 
-        // 2. Распределяем колонки из пула (d_1, s_1...)
+        // 2. fields mapping
         AtomicInteger dCount = new AtomicInteger(1);
+        AtomicInteger nCount = new AtomicInteger(1);
         AtomicInteger tCount = new AtomicInteger(1);
         AtomicInteger lCount = new AtomicInteger(1);
         AtomicInteger iCount = new AtomicInteger(1);
-        AtomicInteger sCount = new AtomicInteger(1);
         AtomicInteger ttCount = new AtomicInteger(1);
         AtomicInteger bCount = new AtomicInteger(1);
 
         List<FormColumn> definitions = fields.stream().map(field -> {
             String columnName = switch (field.type()) {
-                case MONEY, NUMBER -> (dCount.get() <= 10) ? "d_" + dCount.getAndIncrement() : "extra_data";
-                case DATE -> (tCount.get() <= 10) ? "t_" + tCount.getAndIncrement() : "extra_data";
-                case LINK -> (lCount.get() <= 10) ? "l_" + lCount.getAndIncrement() : "extra_data";
-                case BUSINESS_ID -> (iCount.get() <= 10) ? "id_" + iCount.getAndIncrement() : "extra_data";
-                case SHORT_TEXT -> (dCount.get() <= 10) ? "s_" + sCount.getAndIncrement() : "extra_data";
-                case TEXT -> (dCount.get() <= 10) ? "txt_" + ttCount.getAndIncrement() : "extra_data";
-                case FLAG -> (bCount.get() <= 10) ? "b_" + dCount.getAndIncrement() : "extra_data";
+                case MONEY -> (dCount.get() <= 4) ? "d_" + dCount.getAndIncrement() : "extra_data";
+                case NUMBER -> (nCount.get() <= 4) ? "n_" + nCount.getAndIncrement() : "extra_data";
+                case DATE -> (tCount.get() <= 5) ? "t_" + tCount.getAndIncrement() : "extra_data";
+                case LINK -> (lCount.get() <= 5) ? "l_" + lCount.getAndIncrement() : "extra_data";
+                case BUSINESS_ID -> (iCount.get() <= 5) ? "id_" + iCount.getAndIncrement() : "extra_data";
+                case TEXT -> (ttCount.get() <= 15) ? "txt_" + ttCount.getAndIncrement() : "extra_data";
+                case FLAG -> (bCount.get() <= 5) ? "b_" + bCount.getAndIncrement() : "extra_data";
 
-                default -> "extra_data"; // Если тип неизвестен или пул кончился
+                default -> "extra_data"; // if type is unknown or the field poll exceeded
             };
 
             return FormColumn.builder()
@@ -87,8 +88,7 @@ public class FormService {
     }
 
 
-    //  Получение списка форм пользователя текущей компании,
-    //  чтобы фронтенд мог отрисовать боковое меню с таблицами пользователя
+    //  get all forms of user for the company
     public List<FormMetadataDto> getAllForms() {
         return formMetadataRepository.findAll().stream().map(form -> {
             List<FormColumn> formColumns = formColumnRepository.getByFormUuid(form.getUuid());
@@ -106,9 +106,16 @@ public class FormService {
                 formUuid,
                 formName,
                 formDescription,
-                formColumns.stream().map(column ->
-                        new FormField(column.getUuid(), column.getUserKey(), column.getFieldType(), column.getOrderNumber())
-                ).toList());
+                formColumns.stream()
+                        .map(column ->
+                                new FormFieldDto(
+                                        column.getUuid(),
+                                        column.getUserKey(),
+                                        column.getFieldType(),
+                                        column.getOrderNumber()
+                                )
+                        ).toList()
+        );
     }
 
     public FormMetadataDto getFormAndColumnMetadata(UUID formUuid) {
@@ -140,21 +147,20 @@ public class FormService {
     @Transactional
     @CacheEvict(value = "formDefinitions", key = "#formUuid")
     public void restoreForm(UUID formUuid) {
-        UUID currentCompanyUuid = TenantContext.get(); // Наш ScopedValue из Java 25
+        UUID currentCompanyUuid = TenantContext.get();
 
-        // Выполняем апдейт. Если форма была удалена — она снова станет активной.
         formMetadataRepository.restoreDeletedForm(formUuid, currentCompanyUuid);
 
-        log.info("Form {} restored from trash by company {}", formUuid, currentCompanyUuid);
+        log.info("Form {} restored from trash for company {}", formUuid, currentCompanyUuid);
     }
 
-    // Благодаря @TenantId, count() вернет количество таблиц ТОЛЬКО текущей компании
+    // count existing forms of the company
     private void checkQuota() {
         long currentFormsCount = formMetadataRepository.count();
 
         if (currentFormsCount >= maxFormsQuota) {
             throw new QuotaExceededException(
-                    "Лимит таблиц исчерпан (%d из %d). Перейдите на тариф Business."
+                    "Forms quota exceeded (%d of %d). Upgrade to the Business plan."
                             .formatted(currentFormsCount, maxFormsQuota)
             );
         }

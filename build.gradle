@@ -36,32 +36,35 @@ dependencies {
 
     implementation 'org.postgresql:postgresql'
 
-    // JSONB Support (Hypersistence для Hibernate 6.6+)
+    // JSONB Support (Hypersistence - Hibernate 6.6+)
     implementation 'io.hypersistence:hypersistence-utils-hibernate-73:3.15.0'
 
-    // Для Rate Limiting (Bucket4j)
+    // Rate Limiting (Bucket4j)
     implementation 'com.bucket4j:bucket4j-core:8.10.1'
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-    // Работа с Excel (XLSX)
+    // Excel (XLSX)
     implementation("org.apache.poi:poi-ooxml:5.3.0")
     implementation("com.monitorjbl:xlsx-streamer:2.2.0")
     implementation("com.github.pjfanning:excel-streaming-reader:5.0.1")
 
-    // Работа с CSV
+    // CSV
     implementation("com.opencsv:opencsv:5.9")
 
+    // OpenAPI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+//    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+//    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+//
+//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {

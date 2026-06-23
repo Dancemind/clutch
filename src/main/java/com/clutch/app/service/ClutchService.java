@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Row;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
 
 @Slf4j
 @Service
@@ -37,17 +40,14 @@ public class ClutchService {
     private final FormService formService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /**
-     * Создание записей с динамическим маппингом и валидацией
-     */
     @Transactional
-    public List<Map<String, Object>> createRows(UUID formUuid, List<RowDto> rowsData) throws ValidationException {
+    public List<RowDto> createRows(UUID formUuid, List<RowDto> rowsData) throws ValidationException {
 
-        List<Map<String, Object>> createdRows = new ArrayList<>();
+        List<RowDto> createdRows = new ArrayList<>();
 
         for (RowDto rowData : rowsData) {
             Map<UUID, Object> fieldsData = rowData.fieldsData().stream()
-                    .collect(Collectors.toMap(field -> UUID.fromString(field.fieldId()), FieldDto::value));
+                    .collect(Collectors.toMap(FieldDto::id, FieldDto::value));
 
             createdRows.add(
                     createRow(formUuid, rowData.orderNumber(), fieldsData)
@@ -56,11 +56,8 @@ public class ClutchService {
         return createdRows;
     }
 
-    /**
-     * Создание записи с динамическим маппингом и валидацией
-     */
     @Transactional
-    public Map<String, Object> createRow(UUID formUuid, Long orderNumber, Map<UUID, Object> payload)
+    public RowDto createRow(UUID formUuid, Long orderNumber, Map<UUID, Object> payload)
             throws ValidationException {
         // 1. Получаем структуру формы и правила из метаданных (с кэшем в Redis)
         Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
@@ -88,15 +85,16 @@ public class ClutchService {
         return mappingService.mapFromEntity(savedClutch, definition);
     }
 
-    /**
-     * Чтение данных формы в пользовательском формате
-     */
+    // get form/table in user-friendly format
     @Transactional(readOnly = true)
     public FormDto getForm(UUID formUuid) {
         Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
 
-        // get form and put all data into it
         Form formMetadata = formService.getFormMetadata(formUuid);
+
+        if (isNull(formMetadata)) {
+            throw new EntityNotFoundException("Form metadata not found");
+        }
 
         List<FormColumnDto> formColumnsMetadata = metadataService.getColumnsMetadataByFormId(formUuid).stream()
                 .map(columnMD ->
@@ -105,7 +103,8 @@ public class ClutchService {
                                 columnMD.getUuid().toString(),
                                 columnMD.getUserKey(),
                                 columnMD.getFieldType()
-                        ))
+                        )
+                )
                 .toList();
 
         List<FormRowDto> rowsData = clutchRepository.findByFormUuid(formUuid).stream()
@@ -113,9 +112,9 @@ public class ClutchService {
                         new FormRowDto(
                                 row.getOrderNumber(),
                                 row.getUuid().toString(),
-                                mappingService.mapFromEntity(row, definition).entrySet().stream()
-                                        .collect(HashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll)
-
+                                mappingService.mapFromEntity(row, definition).fieldsData().stream()
+                                        .collect(HashMap::new, (m, v) ->
+                                                m.put(v.id().toString(), v.value()), HashMap::putAll)
                         )
                 )
                 .toList();
@@ -142,7 +141,8 @@ public class ClutchService {
         List<ValidationRule> rules = metadataService.getValidationRules(formUuid);
 
         // 3. Делаем "снимок" данных ДО изменений для аудита
-        Map<String, Object> oldSnapshot = mappingService.mapFromEntity(existingRecord, definition);
+        Map<String, Object> oldSnapshot = mappingService.mapFromEntity(existingRecord, definition).fieldsData().stream()
+                .collect(HashMap::new, (m, v) -> m.put(v.id().toString(), v.value()), HashMap::putAll);
 
         // 4. Применяем новые данные к существующей сущности через VarHandles
         // Важно: mappingService изменит только те поля, которые пришли в payload
@@ -157,10 +157,15 @@ public class ClutchService {
         Clutch updated = clutchRepository.save(existingRecord);
 
         // 7. Публикуем событие аудита (асинхронно)
-        Map<String, Object> newSnapshot = mappingService.mapFromEntity(updated, definition);
-        eventPublisher.publishEvent(new ClutchChangeEvent(
-                updated.getCompanyUuid(), updated.getUuid(), AuditAction.UPDATE, oldSnapshot, newSnapshot, "current_user"
-        ));
+        Map<String, Object> newSnapshot = mappingService.mapFromEntity(updated, definition).fieldsData().stream()
+                .collect(HashMap::new, (m, v) -> m.put(v.id().toString(), v.value()), HashMap::putAll);
+
+        eventPublisher.publishEvent(
+                new ClutchChangeEvent(
+                        updated.getCompanyUuid(), updated.getUuid(), AuditAction.UPDATE,
+                        oldSnapshot, newSnapshot, "current_user"
+                )
+        );
 
         return newSnapshot;
     }

@@ -27,19 +27,15 @@ public class ClutchController {
     private final ClutchService clutchService;
     private final ClutchRepository clutchRepository;
     private final AuditLogRepository auditLogRepository;
-//    private final SearchService searchService;
-//    private final MetadataService metadataService;
-//    private final VarHandleMappingService mappingService;
-
 
     // Создание записи в динамическом формате
     @PostMapping("/form/{formUuid}")
-    public List<Map<String, Object>> create(@PathVariable UUID formUuid, @RequestBody List<RowDto> rows)
+    public List<RowDto> create(@PathVariable UUID formUuid, @RequestBody List<RowDto> rows)
             throws ValidationException {
         return clutchService.createRows(formUuid, rows);
     }
 
-    // Чтение всех записей формы (уже отмапленных под бизнес-имена)
+    // full Form data & column mappings for Form by id
     @GetMapping("/form/{formUuid}")
     public FormDto getAll(@PathVariable UUID formUuid) {
         return clutchService.getForm(formUuid);
@@ -64,7 +60,7 @@ public class ClutchController {
         Page<AuditLog> history = auditLogRepository.findByClutchUuidOrderByCreatedAtDesc(record.getUuid(), pageable);
 
         // 3. Маппим результат (можно оставить как есть, так как в JSONB уже лежат понятные ключи)
-        // todo: красивый маппинг в рекорд дто
+        // todo: красивый маппинг в дто
         return history.map(log -> Map.of(
                 "action", log.getAction(),
                 "changedBy", log.getChangedBy(),

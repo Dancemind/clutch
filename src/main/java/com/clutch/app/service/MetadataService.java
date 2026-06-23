@@ -59,7 +59,9 @@ public class MetadataService {
         return columnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getTargetColumn,
-                        FormColumn::getUuid
+                        FormColumn::getUuid,
+                        // for "extraData" saves only last UUID, the rest omitted
+                        (existing, replacement) -> replacement
                 ));
     }
 

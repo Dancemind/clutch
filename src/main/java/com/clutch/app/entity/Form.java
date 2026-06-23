@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "forms")
-@SQLRestriction("deleted_at IS NULL") // Магия Hibernate 6: во все SELECT автоматически добавит это условие
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 public class Form extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 128)
-    private String name; // Например: "Заказы", "Сотрудники"
+    private String name;
 
     @Column(name = "description", length = 512)
     private String description;

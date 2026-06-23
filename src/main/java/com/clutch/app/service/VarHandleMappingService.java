@@ -1,5 +1,7 @@
 package com.clutch.app.service;
 
+import com.clutch.app.dto.FieldDto;
+import com.clutch.app.dto.RowDto;
 import com.clutch.app.entity.Clutch;
 import com.clutch.app.entity.FormColumn;
 import jakarta.annotation.PostConstruct;
@@ -9,16 +11,23 @@ import org.springframework.stereotype.Service;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.Objects.isNull;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class VarHandleMappingService {
 
-    // Кэш: имя поля (например, "d_1") -> его дескриптор доступа
+    // Cache: field name ("d_1") -> access descriptor
     private static final Map<String, VarHandle> POOL_COLUMN_CACHE = new ConcurrentHashMap<>();
 
     private final MetadataService metadataService;
@@ -28,26 +37,26 @@ public class VarHandleMappingService {
         try {
             MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(Clutch.class, MethodHandles.lookup());
 
-            // Сканируем все поля сущности Clutch
-            for (var field : Clutch.class.getDeclaredFields()) {
-                // Нам нужны только наши пуловые колонки и extra_data
+            // cache only pool fields from all fields of Clutch entity
+            for (Field field : Clutch.class.getDeclaredFields()) {
                 if (isPoolColumn(field.getName())) {
                     POOL_COLUMN_CACHE.put(field.getName(), lookup.unreflectVarHandle(field));
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize VarHandles for Clutch", e);
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to initialize VarHandles for Clutch", exception);
         }
     }
 
+    // for pool fields of Clutch entity: txt, d, n, id, t, l, b, extraData
     private boolean isPoolColumn(String name) {
-        return name.matches("^[dstlbix]{1,3}_\\d+$") || name.equals("extraData");
+        return name.matches("^[txdnilb]{1,3}_\\d+$") || name.equals("extraData");
     }
 
     public VarHandle getHandle(String targetColumn) {
         VarHandle handle = POOL_COLUMN_CACHE.get(targetColumn);
         if (handle == null) {
-            throw new IllegalArgumentException("Физическая колонка не найдена в пуле: " + targetColumn);
+            throw new IllegalArgumentException("No field found in column pool with name: " + targetColumn);
         }
         return handle;
     }
@@ -60,21 +69,25 @@ public class VarHandleMappingService {
                 String targetColumn = definition.get(key);
                 VarHandle handle = POOL_COLUMN_CACHE.get(targetColumn);
 
-                try {
-                    // VarHandle сам попытается выполнить приведение типов (Auto-boxing)
-                    // Но для BigDecimal/Long лучше добавить явный конвертер ниже
-                    handle.set(clutch, convertValue(value, handle.varType()));
-                } catch (Exception e) {
-                    // Логируем ошибку маппинга конкретного поля
-                    log.error("Не удалось сохранить значение поля: " +
-                            "target column = " + targetColumn + " value = " + value.toString());
-                    throw new IllegalArgumentException("Не удалось сохранить значение поля: " +
-                            "target column = " + targetColumn + " value = " + value);
+                if (isNull(handle)) {
+                    // mapping not found - put in extra_data column (JSONB)
+                    FormColumn column = metadataService.getColumn(key);
+                    clutch.getExtraData().put(column.getUuid(), value);
+                } else {
+                    try {
+                        // VarHandle Auto-boxing
+                        handle.set(clutch, convertValue(value, handle.varType()));
+                    } catch (Exception exception) {
+                        log.error("Save field value error: " +
+                                "target column = " + targetColumn + " value = " + value.toString(), exception);
+                        throw new IllegalArgumentException("Couldn't save field value: " +
+                                "target column = " + targetColumn + " value = " + value);
+                    }
                 }
             } else {
-                // Если маппинга нет — в JSONB
+                // mapping not found - put in extra_data column (JSONB)
                 FormColumn column = metadataService.getColumn(key);
-                clutch.getExtraData().put(column.getUserKey(), value);
+                clutch.getExtraData().put(column.getUuid(), value);
             }
 
         });
@@ -88,7 +101,7 @@ public class VarHandleMappingService {
             return value;
         }
 
-        // Базовая конвертация (расширить под свои нужды)
+        // handle types
         if (targetType == OffsetDateTime.class) {
             return java.time.OffsetDateTime.parse(value.toString());
         }
@@ -98,6 +111,12 @@ public class VarHandleMappingService {
         if (targetType == java.util.UUID.class) {
             return java.util.UUID.fromString(value.toString());
         }
+        if (targetType == Double.class) {
+            return Double.valueOf(value.toString());
+        }
+        if (targetType == Integer.class) {
+            return Integer.valueOf(value.toString());
+        }
         if (targetType == Long.class) {
             return Long.valueOf(value.toString());
         }
@@ -106,33 +125,28 @@ public class VarHandleMappingService {
     }
 
     /**
-     * Превращает сущность Clutch в понятный пользователю Map на основе метаданных
+     * convert Clutch to user-friendly map
      */
-    public Map<String, Object> mapFromEntity(Clutch clutch, Map<UUID, String> definition) {
-//        Map<Long, String> idToColumnName = metadataService.getIdToUserColumnNameMapping(clutch.getFormId());
+    public RowDto mapFromEntity(Clutch clutch, Map<UUID, String> definition) {
+
         Map<String, UUID> targetColumnToId = metadataService.getTargetColumnToIdMapping(clutch.getFormUuid());
 
-        // Создаем карту для ответа.
-        // Начальный размер = размер маппинга + данные из extra data
-        Map<String, Object> result = new HashMap<>(clutch.getExtraData());
+        List<FieldDto> fields = new ArrayList<>();
 
-        // Проходим по определению формы (title -> s_1)
+        Map<UUID, Object> extraData = new HashMap<>(clutch.getExtraData());
+        extraData.entrySet().forEach(entry -> fields.add(new FieldDto(entry.getKey(), entry.getValue())));
+
+        // form definition (title -> s_1)
         definition.forEach((columnId, targetColumn) -> {
             VarHandle handle = POOL_COLUMN_CACHE.get(targetColumn);
             if (handle != null) {
-                // Читаем значение из поля (d_1, s_1 и т.д.) через VarHandle
                 Object value = handle.get(clutch);
                 if (value != null) {
-                    result.put(targetColumnToId.get(targetColumn).toString(), value);
+                    fields.add(new FieldDto(targetColumnToId.get(targetColumn), value));
                 }
             }
         });
 
-        // Добавляем системные поля, которые всегда нужны фронту
-        result.put("rowUuid", clutch.getUuid());
-        result.put("createdAt", clutch.getCreatedAt());
-        result.put("orderNumber", clutch.getOrderNumber());
-
-        return result;
+        return new RowDto(clutch.getUuid(), clutch.getOrderNumber(), fields);
     }
 }
