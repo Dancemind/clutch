@@ -70,7 +70,7 @@ public class FormService {
             };
 
             return FormColumn.builder()
-                    .formUuid(formSaved.getUuid())
+                    .form(formSaved)
                     .userKey(field.name())
                     .fieldType(field.type())
                     .targetColumn(columnName)
