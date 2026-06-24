@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260624" author="Sas">
+        <createTable tableName="projects">
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(512)"/>
+            <column name="is_active" type="BOOLEAN" defaultValue="true"/>
+
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260624-01" author="Sas">
+        <addColumn tableName="forms">
+            <column name="project_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="forms" indexName="idx_form_project_uuid">
+            <column name="project_uuid"/>
+        </createIndex>
+        <addForeignKeyConstraint baseTableName="forms"
+                                 baseColumnNames="project_uuid"
+                                 referencedTableName="projects"
+                                 referencedColumnNames="uuid"
+                                 constraintName="fk_forms_projects"/>
+    </changeSet>
+
+    <changeSet id="20260624-02" author="Sas">
+        <addForeignKeyConstraint baseTableName="form_columns"
+                                 baseColumnNames="form_uuid"
+                                 referencedTableName="forms"
+                                 referencedColumnNames="uuid"
+                                 constraintName="fk_form_columns_forms"/>
+    </changeSet>
+
+    <changeSet id="20260624-03" author="Sas">
+        <addForeignKeyConstraint baseTableName="clutch"
+                                 baseColumnNames="form_uuid"
+                                 referencedTableName="forms"
+                                 referencedColumnNames="uuid"
+                                 constraintName="fk_clutch_forms"/>
+    </changeSet>
+
+</databaseChangeLog>
