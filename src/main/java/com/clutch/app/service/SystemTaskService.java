@@ -20,7 +20,6 @@ public class SystemTaskService {
 
     public Future<?> runAsSystem(@NotNull Runnable task) {
         return executor.submit(() -> {
-
             try {
                 ScopedValue
                         .where(TenantContext.COMPANY_UUID, TenantContext.SYSTEM_UUID)
