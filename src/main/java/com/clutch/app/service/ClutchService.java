@@ -2,6 +2,7 @@ package com.clutch.app.service;
 
 import com.clutch.app.dto.FieldDto;
 import com.clutch.app.dto.RowDto;
+import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.dto.response.form.FormColumnDto;
 import com.clutch.app.dto.response.form.FormDto;
 import com.clutch.app.dto.response.form.FormRowDto;
@@ -14,7 +15,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ public class ClutchService {
             throws ValidationException {
         // 1. Получаем структуру формы и правила из метаданных (с кэшем в Redis)
         Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRule> rules = metadataService.getValidationRules(formUuid);
+        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
 
         // 2. Инициализируем сущность
         Clutch clutch = Clutch.builder()
@@ -138,7 +138,7 @@ public class ClutchService {
         UUID formUuid = existingRecord.getFormUuid();
 
         Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRule> rules = metadataService.getValidationRules(formUuid);
+        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
 
         // 3. Делаем "снимок" данных ДО изменений для аудита
         Map<String, Object> oldSnapshot = mappingService.mapFromEntity(existingRecord, definition).fieldsData().stream()

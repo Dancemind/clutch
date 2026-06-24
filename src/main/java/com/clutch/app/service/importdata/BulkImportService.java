@@ -3,7 +3,7 @@ package com.clutch.app.service.importdata;
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.entity.Clutch;
 import com.clutch.app.service.MetadataService;
-import com.clutch.app.service.ValidationRule;
+import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.service.ValidationService;
 import com.clutch.app.service.VarHandleMappingService;
 import jakarta.xml.bind.ValidationException;
@@ -56,7 +56,7 @@ public class BulkImportService {
         Map<String, UUID> userKeyToColumnId = metadataService.getUserKeyToColumnIdMapping(formUuid);
 
         List<Map<UUID, Object>> newRows = new ArrayList<>(rows.size());
-        List<ValidationRule> rules = metadataService.getValidationRules(formUuid);
+        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
 
         mapUserKeyToColumnIdAndValidate(formUuid, definition, rules, rows, userKeyToColumnId, newRows);
 
@@ -149,7 +149,7 @@ public class BulkImportService {
 
     private void mapUserKeyToColumnIdAndValidate(UUID formUuid,
                                                  Map<UUID, String> definition,
-                                                 List<ValidationRule> rules,
+                                                 List<ValidationRuleDto> rules,
                                                  List<Map<String, Object>> rows,
                                                  Map<String, UUID> userKeyToColumnId,
                                                  List<Map<UUID, Object>> newRows) throws ValidationException {

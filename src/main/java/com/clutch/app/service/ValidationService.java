@@ -1,5 +1,6 @@
 package com.clutch.app.service;
 
+import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.entity.Clutch;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,8 @@ public class ValidationService {
 
     private final VarHandleMappingService mappingService;
 
-    public void validate(Clutch clutch, List<ValidationRule> rules) throws ValidationException {
-        for (ValidationRule rule : rules) {
+    public void validate(Clutch clutch, List<ValidationRuleDto> rules) throws ValidationException {
+        for (ValidationRuleDto rule : rules) {
             VarHandle handle = mappingService.getHandle(rule.targetColumn());
             Object value = handle.get(clutch);
 

@@ -1,5 +1,6 @@
 package com.clutch.app.service;
 
+import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.entity.FormColumn;
 import com.clutch.app.repository.ColumnDefinitionRepository;
 import com.clutch.app.repository.FormMetadataRepository;
@@ -66,9 +67,9 @@ public class MetadataService {
     }
 
     @Cacheable(value = "formRules", key = "#formUuid")
-    public List<ValidationRule> getValidationRules(UUID formUuid) {
+    public List<ValidationRuleDto> getValidationRules(UUID formUuid) {
         return ruleRepository.findAllByFormUuid(formUuid).stream()
-                .map(entity -> new ValidationRule(
+                .map(entity -> new ValidationRuleDto(
                         entity.getTargetColumn(),
                         entity.getRuleType(),
                         entity.getRuleValue(),
