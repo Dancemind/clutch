@@ -11,15 +11,8 @@ import java.util.UUID;
 @Repository
 public interface ClutchRepository extends JpaRepository<Clutch, UUID> {
 
-    /**
-     * Поиск всех записей внутри конкретной формы.
-     * Hibernate автоматически добавит в SQL: WHERE company_id = ? AND form_id = ?
-     */
     List<Clutch> findByFormUuid(UUID formUuid);
 
-    /**
-     * Поиск по UUID.
-     */
     Optional<Clutch> findByUuid(UUID uuid);
 
     void deleteAllByFormUuidIn(List<UUID> oldFormUuids);
