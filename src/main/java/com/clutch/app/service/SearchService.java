@@ -17,7 +17,7 @@ import java.util.UUID;
 public class SearchService {
 
     private final EntityManager entityManager;
-    private final MetadataService metadataService;
+    private final FormColumnService formColumnService;
 
     public List<Clutch> search(UUID formUuid, List<SearchCriteria> criteriaList) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -25,7 +25,7 @@ public class SearchService {
         Root<Clutch> root = query.from(Clutch.class);
 
         // 1. Получаем маппинг для формы (из кэша Redis через MetadataService)
-        Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
+        Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
 
         List<Predicate> predicates = new ArrayList<>();
 

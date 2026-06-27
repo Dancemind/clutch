@@ -3,7 +3,7 @@ package com.clutch.app.service.scheduled;
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.entity.Form;
 import com.clutch.app.repository.ClutchRepository;
-import com.clutch.app.repository.FormMetadataRepository;
+import com.clutch.app.repository.FormRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DataCleanupTask {
 
-    private final FormMetadataRepository formRepository;
+    private final FormRepository formRepository;
     private final ClutchRepository clutchRepository;
 
     @Scheduled(cron = "0 0 3 * * *") // Каждый день в 3 утра

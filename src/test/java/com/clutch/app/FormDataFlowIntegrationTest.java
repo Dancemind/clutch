@@ -73,7 +73,7 @@ class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
     private UUID getFieldUuid(FormMetadataDto metadata, String fieldName) {
         return metadata.fields().stream()
                 .filter(f -> f.name().equals(fieldName))
-                .map(FormFieldDto::id)
+                .map(FormFieldDto::uuid)
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Field not found: " + fieldName));
     }

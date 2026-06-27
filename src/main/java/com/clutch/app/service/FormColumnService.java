@@ -2,8 +2,8 @@ package com.clutch.app.service;
 
 import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.entity.FormColumn;
-import com.clutch.app.repository.ColumnDefinitionRepository;
-import com.clutch.app.repository.FormMetadataRepository;
+import com.clutch.app.repository.FormColumnRepository;
+import com.clutch.app.repository.FormRepository;
 import com.clutch.app.repository.ValidationRuleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -17,25 +17,25 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class MetadataService {
+public class FormColumnService {
 
     public static final String NOT_FOUND_MSG = "Form is not found";
 
-    private final ColumnDefinitionRepository columnRepository;
+    private final FormColumnRepository formColumnRepository;
     private final ValidationRuleRepository ruleRepository;
-    private final FormMetadataRepository formMetadataRepository;
+    private final FormRepository formRepository;
 
     public List<FormColumn> getColumnsMetadataByFormId(UUID formUuid) {
-        return columnRepository.findAllByFormUuid(formUuid);
+        return formColumnRepository.findAllByFormUuid(formUuid);
     }
 
     @Cacheable(value = "formColumnIdTargetColumn", key = "#formUuid")
     public Map<UUID, String> getIdToTargetColumnMapping(UUID formUuid) {
         // todo: separate form deleted and form never existed
-        formMetadataRepository.findById(formUuid)
+        formRepository.findById(formUuid)
                 .orElseThrow(() -> new EntityNotFoundException(NOT_FOUND_MSG));
 
-        return columnRepository.findAllByFormUuid(formUuid).stream()
+        return formColumnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUuid,
                         FormColumn::getTargetColumn
@@ -45,10 +45,10 @@ public class MetadataService {
     @Cacheable(value = "formUserKeyColumnId", key = "#formUuid")
     public Map<String, UUID> getUserKeyToColumnIdMapping(UUID formUuid) {
         // todo: separate form deleted and form never existed
-        formMetadataRepository.findById(formUuid)
+        formRepository.findById(formUuid)
                 .orElseThrow(() -> new EntityNotFoundException(NOT_FOUND_MSG));
 
-        return columnRepository.findAllByFormUuid(formUuid).stream()
+        return formColumnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUserKey,
                         FormColumn::getUuid
@@ -57,7 +57,7 @@ public class MetadataService {
 
     @Cacheable(value = "formColumnTargetColumnId", key = "#formUuid")
     public Map<String, UUID> getTargetColumnToIdMapping(UUID formUuid) {
-        return columnRepository.findAllByFormUuid(formUuid).stream()
+        return formColumnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getTargetColumn,
                         FormColumn::getUuid,
@@ -79,7 +79,7 @@ public class MetadataService {
     }
 
     public FormColumn getColumn(UUID columnUuid) {
-        return columnRepository.getReferenceById(columnUuid);
+        return formColumnRepository.getReferenceById(columnUuid);
     }
 }
 

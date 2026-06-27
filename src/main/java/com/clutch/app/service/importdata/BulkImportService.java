@@ -2,7 +2,7 @@ package com.clutch.app.service.importdata;
 
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.entity.Clutch;
-import com.clutch.app.service.MetadataService;
+import com.clutch.app.service.FormColumnService;
 import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.service.ValidationService;
 import com.clutch.app.service.VarHandleMappingService;
@@ -33,7 +33,7 @@ public class BulkImportService {
             List.of("uuid", "company_uuid", "form_uuid", "order_number", "version", "created_at");
 
     private final JdbcTemplate jdbcTemplate;
-    private final MetadataService metadataService;
+    private final FormColumnService formColumnService;
     private final ValidationService validationService;
     private final VarHandleMappingService mappingService;
 
@@ -51,12 +51,12 @@ public class BulkImportService {
     public void importDataPgCopy(UUID formUuid, List<Map<String, Object>> rows) throws ValidationException {
         UUID companyUuid = TenantContext.get();
 
-        Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
+        Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
         Map<String, UUID> columnNameToColumnId = mapColumnNameToUserKey(definition);
-        Map<String, UUID> userKeyToColumnId = metadataService.getUserKeyToColumnIdMapping(formUuid);
+        Map<String, UUID> userKeyToColumnId = formColumnService.getUserKeyToColumnIdMapping(formUuid);
 
         List<Map<UUID, Object>> newRows = new ArrayList<>(rows.size());
-        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
+        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
         mapUserKeyToColumnIdAndValidate(formUuid, definition, rules, rows, userKeyToColumnId, newRows);
 

@@ -36,7 +36,7 @@ public class ClutchService {
     private final ClutchRepository clutchRepository;
     private final ValidationService validationService;
     private final VarHandleMappingService mappingService;
-    private final MetadataService metadataService;
+    private final FormColumnService formColumnService;
     private final FormService formService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -60,8 +60,8 @@ public class ClutchService {
     public RowDto createRow(UUID formUuid, Long orderNumber, Map<UUID, Object> payload)
             throws ValidationException {
         // 1. Получаем структуру формы и правила из метаданных (с кэшем в Redis)
-        Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
+        Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
+        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
         // 2. Инициализируем сущность
         Clutch clutch = Clutch.builder()
@@ -88,19 +88,19 @@ public class ClutchService {
     // get form/table in user-friendly format
     @Transactional(readOnly = true)
     public FormDto getForm(UUID formUuid) {
-        Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
+        Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
 
-        Form formMetadata = formService.getFormMetadata(formUuid);
+        Form form = formService.getForm(formUuid);
 
-        if (isNull(formMetadata)) {
+        if (isNull(form)) {
             throw new EntityNotFoundException("Form metadata not found");
         }
 
-        List<FormColumnDto> formColumnsMetadata = metadataService.getColumnsMetadataByFormId(formUuid).stream()
+        List<FormColumnDto> formColumnsMetadata = formColumnService.getColumnsMetadataByFormId(formUuid).stream()
                 .map(columnMD ->
                         new FormColumnDto(
                                 columnMD.getOrderNumber(),
-                                columnMD.getUuid().toString(),
+                                columnMD.getUuid(),
                                 columnMD.getUserKey(),
                                 columnMD.getFieldType()
                         )
@@ -120,9 +120,9 @@ public class ClutchService {
                 .toList();
 
         return new FormDto(
-                formMetadata.getUuid().toString(),
-                formMetadata.getName(),
-                formMetadata.getDescription(),
+                form.getUuid().toString(),
+                form.getName(),
+                form.getDescription(),
                 formColumnsMetadata,
                 rowsData
         );
@@ -137,8 +137,8 @@ public class ClutchService {
         // 2. Получаем метаданные формы для маппинга и валидации
         UUID formUuid = existingRecord.getFormUuid();
 
-        Map<UUID, String> definition = metadataService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRuleDto> rules = metadataService.getValidationRules(formUuid);
+        Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
+        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
         // 3. Делаем "снимок" данных ДО изменений для аудита
         Map<String, Object> oldSnapshot = mappingService.mapFromEntity(existingRecord, definition).fieldsData().stream()

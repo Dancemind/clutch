@@ -9,28 +9,31 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface FormMetadataRepository extends JpaRepository<Form, UUID> {
-    Form getFormMetadataByUuid(UUID uuid);
+public interface FormRepository extends JpaRepository<Form, UUID> {
 
-    // Чтобы найти удаленную форму, нам нужен нативный запрос или специальный Filter,
-    // так как @SQLRestriction отсечет её в обычном findById.
-    // Обычные методы (findAll, findById) будут автоматически
-    // добавлять "WHERE deleted_at IS NULL" благодаря @SQLRestriction
+    Optional<Form> findByUuid(UUID uuid);
+
+    @Query(value = "SELECT DISTINCT f FROM Form f LEFT JOIN FETCH f.columns WHERE f.uuid = :uuid", nativeQuery = true)
+    Optional<Form> findWithColumnsByUuid(@Param("uuid") UUID uuid);
+
+    @Query(value = "SELECT DISTINCT f FROM Form f LEFT JOIN FETCH f.columns", nativeQuery = true)
+    List<Form> findAllWithColumns();
+
+    List<Form> deleteAllByUuidIn(List<UUID> formUuids);
 
     @Modifying
     @Query("UPDATE Form f SET f.deletedAt = null WHERE f.uuid = :uuid AND f.companyUuid = :companyUuid")
     void restoreDeletedForm(@Param("uuid") UUID uuid, @Param("companyUuid") UUID companyUuid);
 
-    // Метод для корзины: найти только удаленные таблицы компании
     @Query(value = "SELECT * FROM forms WHERE deleted_at IS NOT NULL AND company_uuid = :companyUuid", nativeQuery = true)
-    List<Form> findTrash(@Param("companyUuid") UUID companyUuid);
+    List<Form> findDeletedFormsByCompany(@Param("companyUuid") UUID companyUuid);
 
-    // Для системного планировщика: найти таблицы помеченные как удаленные
+    // find expired forms to remove them from database
     @Query(value = "SELECT * FROM forms WHERE deleted_at < :threshold", nativeQuery = true)
     List<Form> findExpiredForms(@Param("threshold") OffsetDateTime threshold);
 
-    void deleteAllByUuidIn(List<UUID> oldFormUuids);
 }

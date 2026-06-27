@@ -30,7 +30,7 @@ public class VarHandleMappingService {
     // Cache: field name ("d_1") -> access descriptor
     private static final Map<String, VarHandle> POOL_COLUMN_CACHE = new ConcurrentHashMap<>();
 
-    private final MetadataService metadataService;
+    private final FormColumnService formColumnService;
 
     @PostConstruct
     public void init() {
@@ -71,7 +71,7 @@ public class VarHandleMappingService {
 
                 if (isNull(handle)) {
                     // mapping not found - put in extra_data column (JSONB)
-                    FormColumn column = metadataService.getColumn(key);
+                    FormColumn column = formColumnService.getColumn(key);
                     clutch.getExtraData().put(column.getUuid(), value);
                 } else {
                     try {
@@ -86,7 +86,7 @@ public class VarHandleMappingService {
                 }
             } else {
                 // mapping not found - put in extra_data column (JSONB)
-                FormColumn column = metadataService.getColumn(key);
+                FormColumn column = formColumnService.getColumn(key);
                 clutch.getExtraData().put(column.getUuid(), value);
             }
 
@@ -129,7 +129,7 @@ public class VarHandleMappingService {
      */
     public RowDto mapFromEntity(Clutch clutch, Map<UUID, String> definition) {
 
-        Map<String, UUID> targetColumnToId = metadataService.getTargetColumnToIdMapping(clutch.getFormUuid());
+        Map<String, UUID> targetColumnToId = formColumnService.getTargetColumnToIdMapping(clutch.getFormUuid());
 
         List<FieldDto> fields = new ArrayList<>();
 
