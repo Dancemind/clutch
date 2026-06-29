@@ -22,7 +22,7 @@ import java.util.UUID;
 public class AuditLog extends BaseEntity {
 
     @Column(name = "clutch_uuid", nullable = false)
-    private UUID clutchUuid;
+    private UUID rowUuid;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false)
@@ -37,6 +37,6 @@ public class AuditLog extends BaseEntity {
     private Map<String, Object> newValues;
 
     @Column(name = "changed_by")
-    private String changedBy; // ID или email пользователя
+    private String changedBy; // ID or Email
 }
 

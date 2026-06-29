@@ -28,7 +28,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Clutch extends BaseEntity {
+public class RowData extends BaseEntity {
 
     @Column(name = "form_uuid", nullable = false)
     private UUID formUuid;

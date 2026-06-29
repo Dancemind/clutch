@@ -1,6 +1,6 @@
 package com.clutch.app.repository;
 
-import com.clutch.app.entity.Clutch;
+import com.clutch.app.entity.RowData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ClutchRepository extends JpaRepository<Clutch, UUID> {
+public interface RowDataRepository extends JpaRepository<RowData, UUID> {
 
-    List<Clutch> findByFormUuid(UUID formUuid);
+    List<RowData> findByFormUuid(UUID formUuid);
 
-    Optional<Clutch> findByUuid(UUID uuid);
+    Optional<RowData> findByUuid(UUID uuid);
 
     void deleteAllByFormUuidIn(List<UUID> oldFormUuids);
 

@@ -2,7 +2,7 @@ package com.clutch.app.service;
 
 import com.clutch.app.dto.FieldDto;
 import com.clutch.app.dto.RowDto;
-import com.clutch.app.entity.Clutch;
+import com.clutch.app.entity.RowData;
 import com.clutch.app.entity.FormColumn;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +35,10 @@ public class VarHandleMappingService {
     @PostConstruct
     public void init() {
         try {
-            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(Clutch.class, MethodHandles.lookup());
+            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(RowData.class, MethodHandles.lookup());
 
             // cache only pool fields from all fields of Clutch entity
-            for (Field field : Clutch.class.getDeclaredFields()) {
+            for (Field field : RowData.class.getDeclaredFields()) {
                 if (isPoolColumn(field.getName())) {
                     POOL_COLUMN_CACHE.put(field.getName(), lookup.unreflectVarHandle(field));
                 }
@@ -61,33 +61,33 @@ public class VarHandleMappingService {
         return handle;
     }
 
-    public void mapToEntity(Map<UUID, Object> payload, Clutch clutch, Map<UUID, String> definition) {
+    public void mapToEntity(List<FieldDto> fields, RowData row, Map<UUID, String> definition) {
 
-        payload.forEach((key, value) -> {
+        fields.forEach(field -> {
 
-            if (definition.keySet().contains(key)) {
-                String targetColumn = definition.get(key);
+            if (definition.keySet().contains(field.id())) {
+                String targetColumn = definition.get(field.id());
                 VarHandle handle = POOL_COLUMN_CACHE.get(targetColumn);
 
                 if (isNull(handle)) {
                     // mapping not found - put in extra_data column (JSONB)
-                    FormColumn column = formColumnService.getColumn(key);
-                    clutch.getExtraData().put(column.getUuid(), value);
+                    FormColumn column = formColumnService.getColumn(field.id());
+                    row.getExtraData().put(column.getUuid(), field.value());
                 } else {
                     try {
                         // VarHandle Auto-boxing
-                        handle.set(clutch, convertValue(value, handle.varType()));
+                        handle.set(row, convertValue(field.value(), handle.varType()));
                     } catch (Exception exception) {
                         log.error("Save field value error: " +
-                                "target column = " + targetColumn + " value = " + value.toString(), exception);
+                                "target column = " + targetColumn + " value = " + field.value().toString(), exception);
                         throw new IllegalArgumentException("Couldn't save field value: " +
-                                "target column = " + targetColumn + " value = " + value);
+                                "target column = " + targetColumn + " value = " + field.value());
                     }
                 }
             } else {
                 // mapping not found - put in extra_data column (JSONB)
-                FormColumn column = formColumnService.getColumn(key);
-                clutch.getExtraData().put(column.getUuid(), value);
+                FormColumn column = formColumnService.getColumn(field.id());
+                row.getExtraData().put(column.getUuid(), field.value());
             }
 
         });
@@ -127,26 +127,26 @@ public class VarHandleMappingService {
     /**
      * convert Clutch to user-friendly map
      */
-    public RowDto mapFromEntity(Clutch clutch, Map<UUID, String> definition) {
+    public RowDto mapFromEntity(RowData row, Map<UUID, String> definition) {
 
-        Map<String, UUID> targetColumnToId = formColumnService.getTargetColumnToIdMapping(clutch.getFormUuid());
+        Map<String, UUID> targetColumnToId = formColumnService.getTargetColumnToIdMapping(row.getFormUuid());
 
         List<FieldDto> fields = new ArrayList<>();
 
-        Map<UUID, Object> extraData = new HashMap<>(clutch.getExtraData());
+        Map<UUID, Object> extraData = new HashMap<>(row.getExtraData());
         extraData.entrySet().forEach(entry -> fields.add(new FieldDto(entry.getKey(), entry.getValue())));
 
         // form definition (title -> s_1)
         definition.forEach((columnId, targetColumn) -> {
             VarHandle handle = POOL_COLUMN_CACHE.get(targetColumn);
             if (handle != null) {
-                Object value = handle.get(clutch);
+                Object value = handle.get(row);
                 if (value != null) {
                     fields.add(new FieldDto(targetColumnToId.get(targetColumn), value));
                 }
             }
         });
 
-        return new RowDto(clutch.getUuid(), clutch.getOrderNumber(), fields);
+        return new RowDto(row.getUuid(), row.getOrderNumber(), fields);
     }
 }

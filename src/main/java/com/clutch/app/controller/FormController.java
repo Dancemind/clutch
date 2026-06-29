@@ -1,19 +1,23 @@
 package com.clutch.app.controller;
 
-import com.clutch.app.config.TenantContext;
 import com.clutch.app.dto.FormFieldDto;
+import com.clutch.app.dto.FormInfoDto;
 import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.dto.response.form.FormColumnDto;
-import com.clutch.app.dto.response.form.FormDto;
-import com.clutch.app.entity.Form;
 import com.clutch.app.enums.FieldType;
 import com.clutch.app.mappers.ClutchMapper;
-import com.clutch.app.repository.FormRepository;
 import com.clutch.app.service.FormService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +28,6 @@ import java.util.UUID;
 public class FormController {
 
     private final FormService formService;
-    private final FormRepository formRepository;
     private final ClutchMapper clutchMapper;
 
     /**
@@ -34,7 +37,7 @@ public class FormController {
      * @return form metadata
      */
     @PostMapping
-    public FormMetadataDto createForm(@RequestBody FormMetadataDto formMetadata) {
+    public FormMetadataDto createFormAndColumns(@RequestBody FormMetadataDto formMetadata) {
         return formService.createForm(formMetadata.name(), formMetadata.description(), formMetadata.fields());
     }
 
@@ -46,8 +49,8 @@ public class FormController {
      * @return form metadata
      */
     @PostMapping("columns")
-    public FormMetadataDto createForm(@RequestParam("id") UUID uuid,
-                                      @RequestBody List<FormFieldDto> formFieldDtos) {
+    public FormMetadataDto createFormColumns(@RequestParam("id") UUID uuid,
+                                             @RequestBody List<FormFieldDto> formFieldDtos) {
         return formService.createFormFields(uuid, formFieldDtos);
     }
 
@@ -85,18 +88,25 @@ public class FormController {
 
     /**
      * Updates form (name, description)
+     *
+     * @param formInfoDto form data to update
+     * @return form metadata, includes columns data
      */
     @PatchMapping("{uuid}")
-    public FormMetadataDto updateForm(@PathVariable UUID uuid,
-                                      @RequestBody FormDto formDto) {
+    public FormMetadataDto updateForm(@RequestBody FormInfoDto formInfoDto) {
         return clutchMapper.toFormMetadataDto(
-                formService.updateForm(uuid, formDto),
+                formService.updateForm(formInfoDto),
                 List.of()
         );
     }
 
     /**
      * Updates form column
+     *
+     * @param formUuid form uuid
+     * @param columnUuid column uuid
+     * @param formColumnDto form column data
+     * @return form metadata, includes columns data
      */
     @PatchMapping("{formUuid}/columns/{columnUuid}")
     public FormMetadataDto updateFormColumn(@PathVariable UUID formUuid,
@@ -106,22 +116,29 @@ public class FormController {
     }
 
     /**
-     * Updates form column
+     * Updates form columns
+     *
+     * @param formUuid form uuid
+     * @param formColumnDtos form columns data to update
+     * @return form metadata, includes columns data
      */
     @PatchMapping("{formUuid}/columns")
-    public FormMetadataDto updateFormColumn(@PathVariable UUID formUuid,
+    public FormMetadataDto updateFormColumns(@PathVariable UUID formUuid,
                                             @RequestBody List<FormColumnDto> formColumnDtos) {
         return formService.updateFormColumns(formUuid, formColumnDtos);
     }
 
     /**
-     * Removes forms
+     * Removes form
      *
-     * @return list of deleted forms
+     * @param formUuid form uuid
+     * @return form
      */
     @DeleteMapping("/forms")
-    public Form deletedForm(UUID formUuid) {
-        return formService.deleteForm(formUuid);
+    public FormInfoDto deletedForm(UUID formUuid) {
+        return clutchMapper.toFormInfoDto(
+                formService.deleteForm(formUuid)
+        );
     }
 
     /**
@@ -130,17 +147,21 @@ public class FormController {
      * @return list of forms
      */
     @GetMapping("/forms/trash")
-    public List<Form> getDeletedForms() {
-        return formRepository.findDeletedFormsByCompany(TenantContext.get());
+    public List<FormInfoDto> getDeletedForms() {
+        return clutchMapper.toFormInfoDto(
+              formService.findDeletedFormByCompany()
+        );
     }
 
     /**
-     * Restores form
+     * Restores deleted form
      *
      * @param formUuid form uuid
      */
     @PostMapping("/forms/restore")
-    public void restoreForm(@RequestParam UUID formUuid) {
-        formService.restoreForm(formUuid);
+    public FormInfoDto restoreForm(@RequestParam UUID formUuid) {
+        return clutchMapper.toFormInfoDto(
+                formService.restoreForm(formUuid)
+        );
     }
 }

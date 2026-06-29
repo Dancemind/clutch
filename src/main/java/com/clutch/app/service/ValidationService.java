@@ -1,10 +1,10 @@
 package com.clutch.app.service;
 
 import com.clutch.app.dto.ValidationRuleDto;
-import com.clutch.app.entity.Clutch;
-import jakarta.xml.bind.ValidationException;
+import com.clutch.app.entity.RowData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.clutch.app.exceptions.ValidationException;
 
 import java.lang.invoke.VarHandle;
 import java.math.BigDecimal;
@@ -16,10 +16,10 @@ public class ValidationService {
 
     private final VarHandleMappingService mappingService;
 
-    public void validate(Clutch clutch, List<ValidationRuleDto> rules) throws ValidationException {
+    public void validate(RowData row, List<ValidationRuleDto> rules) {
         for (ValidationRuleDto rule : rules) {
             VarHandle handle = mappingService.getHandle(rule.targetColumn());
-            Object value = handle.get(clutch);
+            Object value = handle.get(row);
 
             boolean isValid = switch (rule.type()) {
                 case REQUIRED -> value != null;

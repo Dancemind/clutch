@@ -5,9 +5,10 @@ import com.clutch.app.enums.AuditAction;
 import java.util.Map;
 import java.util.UUID;
 
-public record ClutchChangeEvent(
+public record RowChangedEvent(
     UUID companyUuid,
-    UUID clutchUuidd,
+    UUID projectId,
+    UUID rowUuid,
     AuditAction action,
     Map<String, Object> oldData,
     Map<String, Object> newData,

@@ -3,8 +3,8 @@ package com.clutch.app.service;
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.dto.FormFieldDto;
 import com.clutch.app.dto.FormMetadataDto;
+import com.clutch.app.dto.FormInfoDto;
 import com.clutch.app.dto.response.form.FormColumnDto;
-import com.clutch.app.dto.response.form.FormDto;
 import com.clutch.app.entity.Form;
 import com.clutch.app.entity.FormColumn;
 import com.clutch.app.exceptions.IllegalArgumentException;
@@ -254,8 +254,13 @@ public class FormService {
         return deletedForm;
     }
 
+    @Transactional(readOnly = true)
+    public List<Form> findDeletedFormByCompany() {
+        return formRepository.findDeletedFormsByCompany(TenantContext.get());
+    }
+
     @Transactional
-    public void restoreForm(UUID formUuid) {
+    public Form restoreForm(UUID formUuid) {
         checkQuota();
 
         UUID currentCompanyUuid = TenantContext.get();
@@ -263,6 +268,8 @@ public class FormService {
         formRepository.restoreDeletedForm(formUuid, currentCompanyUuid);
 
         log.info("Form {} restored from trash for company {}", formUuid, currentCompanyUuid);
+
+        return getForm(formUuid);
     }
 
     /**
@@ -282,18 +289,17 @@ public class FormService {
     /**
      * Updates name or/and description of Form by form uuid
      *
-     * @param uuid    form uuid
-     * @param formDto form dto
+     * @param formInfoDto    form info
      * @return form metadata
      */
     @Transactional
-    public Form updateForm(UUID uuid, FormDto formDto) {
-        if (isNull(uuid)) {
+    public Form updateForm(FormInfoDto formInfoDto) {
+        if (isNull(formInfoDto.uuid())) {
             throw new IllegalArgumentException("Form uuid is empty");
         }
-        Form form = getForm(uuid);
-        form.setName(formDto.name());
-        form.setDescription(formDto.description());
+        Form form = getForm(formInfoDto.uuid());
+        form.setName(formInfoDto.formName());
+        form.setDescription(formInfoDto.formDescription());
         return formRepository.save(form);
     }
 

@@ -14,6 +14,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "forms")
@@ -32,6 +33,8 @@ public class Form extends BaseEntity {
     @JoinColumn(name = "project_uuid", nullable = false)
     private Project project;
 
+    private UUID projectUuid;
+
     @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<FormColumn> columns = new ArrayList<>();
@@ -39,11 +42,9 @@ public class Form extends BaseEntity {
     @Column(name = "description", length = 512)
     private String description;
 
-    @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
 
     public boolean isDeleted() {
