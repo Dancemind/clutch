@@ -61,6 +61,13 @@ public class VarHandleMappingService {
         return handle;
     }
 
+    public void mapToEntity(Map<UUID, Object> fields, RowData row, Map<UUID, String> definition) {
+        List<FieldDto> fieldDtos = fields.entrySet().stream()
+                .map(entry -> new FieldDto(entry.getKey(), entry.getValue()))
+                .toList();
+        mapToEntity(fieldDtos, row, definition);
+    }
+
     public void mapToEntity(List<FieldDto> fields, RowData row, Map<UUID, String> definition) {
 
         fields.forEach(field -> {

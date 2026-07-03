@@ -1,7 +1,7 @@
 package com.clutch.app.service.importdata;
 
 import com.clutch.app.config.TenantContext;
-import com.clutch.app.entity.Clutch;
+import com.clutch.app.entity.RowData;
 import com.clutch.app.service.FormColumnService;
 import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.service.ValidationService;
@@ -152,7 +152,7 @@ public class BulkImportService {
                                                  List<ValidationRuleDto> rules,
                                                  List<Map<String, Object>> rows,
                                                  Map<String, UUID> userKeyToColumnId,
-                                                 List<Map<UUID, Object>> newRows) throws ValidationException {
+                                                 List<Map<UUID, Object>> newRows) {
         for (Map<String, Object> row : rows) {
             Map<UUID, Object> newRow = new HashMap<>(row.size());
 
@@ -168,10 +168,10 @@ public class BulkImportService {
             newRows.add(newRow);
 
             // fail-fast validation
-            Clutch tempClutch = new Clutch();
-            tempClutch.setFormUuid(formUuid);
-            mappingService.mapToEntity(newRow, tempClutch, definition);
-            validationService.validate(tempClutch, rules);
+            RowData rowData = new RowData();
+            rowData.setFormUuid(formUuid);
+            mappingService.mapToEntity(newRow, rowData, definition);
+            validationService.validate(rowData, rules);
         }
     }
 
