@@ -4,12 +4,15 @@ import com.clutch.app.dto.FormFieldDto;
 import com.clutch.app.dto.FormInfoDto;
 import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.dto.response.AuditLogDto;
+import com.clutch.app.dto.response.CompanyResponse;
 import com.clutch.app.dto.response.ProjectDto;
+import com.clutch.app.entity.Company;
 import com.clutch.app.entity.Form;
 import com.clutch.app.entity.FormColumn;
 import com.clutch.app.entity.Project;
 import com.clutch.app.entity.audit.AuditLog;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -26,6 +29,9 @@ public interface ClutchMapper {
     List<FormInfoDto> toFormInfoDto(List<Form> form);
 
     AuditLogDto toAuditLogDto(AuditLog auditLog);
+
+    @Mapping(expression = "java(company.isDeleted())", target = "deleted")
+    CompanyResponse mapToCompanyResponse(Company company);
 
     default Page<ProjectDto> toProjectDto(Page<Project> projects) {
         if (projects == null) {

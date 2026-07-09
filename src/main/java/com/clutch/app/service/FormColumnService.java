@@ -8,6 +8,7 @@ import com.clutch.app.repository.ValidationRuleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,13 +18,23 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class FormColumnService {
+public class FormColumnService extends BaseService<FormColumn, UUID> {
 
     public static final String NOT_FOUND_MSG = "Form is not found";
 
     private final FormColumnRepository formColumnRepository;
     private final ValidationRuleRepository ruleRepository;
     private final FormRepository formRepository;
+
+    @Override
+    protected JpaRepository<FormColumn, UUID> getRepository() {
+        return formColumnRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return FormColumn.class.getSimpleName();
+    }
 
     public List<FormColumn> getColumnsMetadataByFormId(UUID formUuid) {
         return formColumnRepository.findAllByFormUuid(formUuid);
@@ -81,5 +92,6 @@ public class FormColumnService {
     public FormColumn getColumn(UUID columnUuid) {
         return formColumnRepository.getReferenceById(columnUuid);
     }
+
 }
 

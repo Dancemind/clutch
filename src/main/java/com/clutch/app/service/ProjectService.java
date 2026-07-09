@@ -7,6 +7,7 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -17,12 +18,22 @@ import static java.util.Objects.isNull;
 
 @Service
 @RequiredArgsConstructor
-public class ProjectService {
+public class ProjectService extends BaseService<Project, UUID> {
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ProjectRepository projectRepository;
+
+    @Override
+    protected JpaRepository<Project, UUID> getRepository() {
+        return projectRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return Project.class.getSimpleName();
+    }
 
     /**
      * Add project

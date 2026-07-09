@@ -8,6 +8,7 @@ import com.clutch.app.enums.FieldType;
 import com.clutch.app.mappers.ClutchMapper;
 import com.clutch.app.service.FormService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,6 +38,7 @@ public class FormController {
      * @return form metadata
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'COMPANY_ADMIN')")
     public FormMetadataDto createFormAndColumns(@RequestBody FormMetadataDto formMetadata) {
         return formService.createForm(formMetadata.name(), formMetadata.description(), formMetadata.fields());
     }

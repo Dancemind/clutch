@@ -18,6 +18,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.clutch.app.security.SecurityService.validateAccessToCompanyAdminActions;
 import static java.util.Objects.isNull;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FormService {
+public class FormService extends BaseService<Form, UUID> {
 
     private static final Pattern COLUMN_PATTERN = Pattern.compile("^([a-z]+_)(\\d+)$");
 
@@ -46,6 +48,16 @@ public class FormService {
 
     private final FormRepository formRepository;
     private final FormColumnRepository formColumnRepository;
+
+    @Override
+    protected JpaRepository<Form, UUID> getRepository() {
+        return formRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return Form.class.getSimpleName();
+    }
 
     /**
      * Creates form and adds form fields (optionally, fields can be empty)
@@ -92,8 +104,7 @@ public class FormService {
     }
 
     public Form getForm(UUID formUuid) {
-        return formRepository.findByUuid(formUuid)
-                .orElseThrow(() -> new ResourceNotFoundException("Form not found with UUID: %s".formatted(formUuid)));
+        return getByIdOrThrow(formUuid);
     }
 
     public Form getFormIncludeColumns(UUID formUuid) {
@@ -235,7 +246,7 @@ public class FormService {
 
     @Cacheable(value = "form", key = "#formUuid")
     public FormMetadataDto getFormIncludingColumns(UUID formUuid) {
-        Form form = getForm(formUuid);
+        Form form = getByIdOrThrow(formUuid);
         List<FormColumn> formColumns = formColumnRepository.findAllByFormUuid(formUuid);
         return getFormMetadataDto(form, formColumns);
     }
@@ -243,8 +254,7 @@ public class FormService {
     @Transactional
     @CacheEvict(value = "form", key = "#formUuid")
     public Form deleteForm(UUID formUuid) {
-        Form form = formRepository.findById(formUuid)
-                .orElseThrow(() -> new ResourceNotFoundException("Form not found"));
+        Form form = getByIdOrThrow(formUuid);
 
         form.setDeletedAt(OffsetDateTime.now());
         Form deletedForm = formRepository.save(form);
@@ -254,11 +264,25 @@ public class FormService {
         return deletedForm;
     }
 
+    /**
+     * Find list of deleted forms of company for user of the company
+     * @return list of forms
+     */
     @Transactional(readOnly = true)
     public List<Form> findDeletedFormByCompany() {
         UUID companyUuid = TenantContext.get()
                 .orElseThrow(() -> new IllegalStateException("Security violation: Tenant context is missing"));
         return formRepository.findDeletedFormsByCompany(companyUuid);
+    }
+
+    /**
+     * Find list of inactive forms of company for company admin
+     * @return list of forms
+     */
+    @Transactional(readOnly = true)
+    public List<Form> findInactiveFormsByCompany() {
+
+        return formRepository.findAllByIsActiveFalse();
     }
 
     @Transactional

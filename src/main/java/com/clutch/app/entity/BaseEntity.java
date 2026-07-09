@@ -20,12 +20,16 @@ public abstract class BaseEntity {
     @GeneratedValue
     private UUID uuid;
 
+    @Version // optimistic lock
+    private Long version;
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    // todo: deletedAt add here
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt = null;
 
-    @Version // optimistic locking
-    private Long version;
-
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }

@@ -3,6 +3,7 @@ package com.clutch.app.controller;
 import com.clutch.app.dto.request.CompanyCreateRequest;
 import com.clutch.app.dto.request.CompanyUpdateRequest;
 import com.clutch.app.dto.response.CompanyResponse;
+import com.clutch.app.mappers.ClutchMapper;
 import com.clutch.app.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,18 +24,23 @@ import java.util.UUID;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final ClutchMapper clutchMapper;
 
     @PostMapping
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public CompanyResponse createCompany(@Valid @RequestBody CompanyCreateRequest request) {
-        return companyService.createCompany(request);
+        return clutchMapper.mapToCompanyResponse(
+                companyService.createCompany(request)
+        );
     }
 
     @PutMapping("/{uuid}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'COMPANY_ADMIN')")
     public CompanyResponse updateCompany(@PathVariable("uuid") UUID uuid,
                                          @Valid @RequestBody CompanyUpdateRequest request) {
-        return companyService.updateCompany(uuid, request);
+        return clutchMapper.mapToCompanyResponse(
+                companyService.updateCompany(uuid, request)
+        );
     }
 
     @DeleteMapping("/{uuid}")

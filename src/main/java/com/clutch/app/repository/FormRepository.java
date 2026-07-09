@@ -32,6 +32,8 @@ public interface FormRepository extends JpaRepository<Form, UUID> {
     @Query(value = "SELECT * FROM forms WHERE deleted_at IS NOT NULL AND company_uuid = :companyUuid", nativeQuery = true)
     List<Form> findDeletedFormsByCompany(@Param("companyUuid") UUID companyUuid);
 
+    List<Form> findAllByIsActiveFalse();
+
     // find expired forms to remove them from database
     @Query(value = "SELECT * FROM forms WHERE deleted_at < :threshold", nativeQuery = true)
     List<Form> findExpiredForms(@Param("threshold") OffsetDateTime threshold);

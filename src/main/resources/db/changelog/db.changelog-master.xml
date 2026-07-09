@@ -18,5 +18,6 @@
     <include file="migrations/011-create-project-users-table.xml" relativeToChangelogFile="true"/>
     <include file="migrations/012-create-default-company.xml" relativeToChangelogFile="true"/>
     <include file="migrations/013-add-deleted-at-column-to-companies-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/014-add-deleted-at-column-to-audit-log.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

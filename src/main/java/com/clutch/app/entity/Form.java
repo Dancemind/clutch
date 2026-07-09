@@ -46,6 +46,4 @@ public class Form extends CompanyBaseEntity {
     @Builder.Default
     private Boolean isActive = true;
 
-    private OffsetDateTime deletedAt;
-
 }

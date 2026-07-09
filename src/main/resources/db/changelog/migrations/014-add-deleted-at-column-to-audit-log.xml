@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260709-01" author="Sas">
+        <addColumn tableName="audit_logs">
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="validation_rules">
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="form_columns">
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="clutch">
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

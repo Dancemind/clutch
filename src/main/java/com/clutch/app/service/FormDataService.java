@@ -15,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +30,7 @@ import static java.util.Objects.isNull;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FormDataService {
+public class FormDataService extends BaseService<RowData, UUID> {
 
     private final RowDataRepository rowDataRepository;
     private final ValidationService validationService;
@@ -37,6 +38,16 @@ public class FormDataService {
     private final FormColumnService formColumnService;
     private final FormService formService;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Override
+    protected JpaRepository<RowData, UUID> getRepository() {
+        return rowDataRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return RowData.class.getSimpleName();
+    }
 
     /**
      * Creates rows - adds data
@@ -50,6 +61,8 @@ public class FormDataService {
         if (rows == null || rows.isEmpty()) {
             return Collections.emptyList();
         }
+
+        formService.validateEntity(formUuid);
 
         Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
         List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);

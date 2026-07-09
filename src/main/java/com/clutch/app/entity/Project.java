@@ -52,11 +52,4 @@ public class Project extends CompanyBaseEntity {
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "deleted_at")
-    private OffsetDateTime deletedAt;
-
-    public boolean isDeleted() {
-        return deletedAt != null;
-    }
-
 }
