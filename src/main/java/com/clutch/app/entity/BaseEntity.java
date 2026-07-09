@@ -1,30 +1,31 @@
 package com.clutch.app.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.TenantId;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@MappedSuperclass
 @Getter
 @Setter
-public abstract class BaseEntity implements TenantEntity {
+@MappedSuperclass
+public abstract class BaseEntity {
 
     @Id
     @GeneratedValue
     private UUID uuid;
 
-    @TenantId // нативный механизм Hibernate 6+
-    @Column(name = "company_uuid", nullable = false, updatable = false)
-    private UUID companyUuid;
-
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Version // оптимистическая блокировка — обязательно для HighLoad
+    // todo: deletedAt add here
+
+    @Version // optimistic locking
     private Long version;
 
 }

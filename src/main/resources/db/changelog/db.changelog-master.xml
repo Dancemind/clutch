@@ -13,5 +13,10 @@
     <include file="migrations/006-clutch-jsonb-default-value.xml" relativeToChangelogFile="true"/>
     <include file="migrations/007-clutch-columns-remastered.xml" relativeToChangelogFile="true"/>
     <include file="migrations/008-add-project-column-to-form.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/009-create-user-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/010-create-company-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/011-create-project-users-table.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/012-create-default-company.xml" relativeToChangelogFile="true"/>
+    <include file="migrations/013-add-deleted-at-column-to-companies-table.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

@@ -1,11 +1,11 @@
 package com.clutch.app.service.importdata;
 
 import com.clutch.app.config.TenantContext;
+import com.clutch.app.exceptions.ValidationException;
 import com.clutch.app.service.notification.SseNotificationService;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
@@ -39,13 +39,15 @@ public class StreamingImportService {
         log.info("Import :: started. File: " + file.getOriginalFilename());
 
         String importId = UUID.randomUUID().toString();
-        UUID companyId = TenantContext.get();
+
+        UUID companyUuid = TenantContext.get()
+                .orElseThrow(() -> new IllegalStateException("Security violation: Tenant context is missing"));
 
         InputStream inputStream = file.getInputStream();
 
         Thread.ofVirtual().start(() -> {
             try {
-                ScopedValue.where(TenantContext.COMPANY_UUID, companyId).run(() -> {
+                TenantContext.runWithTenant(companyUuid, () -> {
                     if (Objects.requireNonNull(file.getOriginalFilename()).endsWith(".csv")) {
                         try {
                             processCsv(formId, importId, inputStream);

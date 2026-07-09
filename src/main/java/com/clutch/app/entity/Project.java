@@ -2,6 +2,10 @@ package com.clutch.app.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -14,6 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "projects")
@@ -23,7 +28,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Project extends BaseEntity {
+public class Project extends CompanyBaseEntity {
 
     @Column(name = "name", nullable = false, length = 128)
     private String name;
@@ -31,6 +36,14 @@ public class Project extends BaseEntity {
     @OneToMany(mappedBy = "project")
     @Builder.Default
     private List<Form> forms = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "project_users",
+            joinColumns = @JoinColumn(name = "project_uuid"),
+            inverseJoinColumns = @JoinColumn(name = "user_uuid")
+    )
+    private Set<User> allowedUsers;
 
     @Column(name = "description", length = 512)
     private String description;

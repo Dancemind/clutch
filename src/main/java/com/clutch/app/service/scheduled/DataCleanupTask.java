@@ -30,7 +30,7 @@ public class DataCleanupTask {
         // todo: move to env var or system
         OffsetDateTime threshold = OffsetDateTime.now().minusDays(30);
 
-        ScopedValue.where(TenantContext.COMPANY_UUID, TenantContext.SYSTEM_UUID).run(() -> {
+        TenantContext.runAsSystem(() -> {
 
             List<UUID> oldFormUuids = formRepository.findExpiredForms(threshold).stream()
                     .map(Form::getUuid)

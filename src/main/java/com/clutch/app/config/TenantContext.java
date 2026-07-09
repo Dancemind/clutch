@@ -1,16 +1,46 @@
 package com.clutch.app.config;
 
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
-public class TenantContext {
+public final class TenantContext {
 
-    // системный контекст
-    public static final UUID SYSTEM_UUID = UUID.fromString("00000000-0000-1111-1111-555555555555");
+    public static final UUID SYSTEM_UUID = UUID.fromString("5757e70a-1d14-4500-8000-0000005757e7");
 
-    // в Java 25 ScopedValue — это новый стандарт передачи данных между слоями
-    public static final ScopedValue<UUID> COMPANY_UUID = ScopedValue.newInstance();
+    private static final ScopedValue<UUID> CURRENT_TENANT = ScopedValue.newInstance();
 
-    public static UUID get() {
-        return COMPANY_UUID.isBound() ? COMPANY_UUID.get() : null;
+    private TenantContext() {
+    }
+
+    public static <T, E extends Throwable> T callWithTenant(UUID tenantId, CheckedSupplier<T, E> action) throws E {
+        return ScopedValue.where(CURRENT_TENANT, tenantId)
+                .call(action::get);
+    }
+
+    public static void runWithTenant(UUID tenantId, Runnable action) {
+        ScopedValue.where(CURRENT_TENANT, tenantId)
+                .run(action);
+    }
+
+    public static <T> T callAsSystem(Supplier<T> action) {
+        return ScopedValue.where(CURRENT_TENANT, SYSTEM_UUID)
+                .call(action::get);
+    }
+
+    public static void runAsSystem(Runnable action) {
+        ScopedValue.where(CURRENT_TENANT, SYSTEM_UUID)
+                .run(action);
+    }
+
+    public static Optional<UUID> get() {
+        return CURRENT_TENANT.isBound()
+                ? Optional.of(CURRENT_TENANT.get())
+                : Optional.empty();
+    }
+
+    @FunctionalInterface
+    public interface CheckedSupplier<T, E extends Throwable> {
+        T get() throws E;
     }
 }

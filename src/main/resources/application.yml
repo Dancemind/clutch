@@ -7,6 +7,16 @@ spring:
       max-file-size: 30MB
       max-request-size: 35MB
       file-size-threshold: 2MB   # up to 2MB files in-RAM processing, don't save to disk
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_GOOGLE_CLIENT_://googleusercontent.com
+            client-secret: YOUR_GOOGLE_CLIENT_SECRET
+            scope:
+              - profile
+              - email
 
   threads:
     virtual:
@@ -76,3 +86,9 @@ springdoc:
   scalar:
     enabled: true
     path: /scalar
+
+security:
+  jwt:
+    token:
+      secret-key: 4jR7X9MkWpQ2zYv6nB8xLa1sK3vT5mQ9BcD7eF4gHiJ=
+      expire-length: 36000000 # 10 hours

@@ -256,18 +256,21 @@ public class FormService {
 
     @Transactional(readOnly = true)
     public List<Form> findDeletedFormByCompany() {
-        return formRepository.findDeletedFormsByCompany(TenantContext.get());
+        UUID companyUuid = TenantContext.get()
+                .orElseThrow(() -> new IllegalStateException("Security violation: Tenant context is missing"));
+        return formRepository.findDeletedFormsByCompany(companyUuid);
     }
 
     @Transactional
     public Form restoreForm(UUID formUuid) {
         checkQuota();
 
-        UUID currentCompanyUuid = TenantContext.get();
+        UUID companyUuid = TenantContext.get()
+                .orElseThrow(() -> new IllegalStateException("Security violation: Tenant context is missing"));
 
-        formRepository.restoreDeletedForm(formUuid, currentCompanyUuid);
+        formRepository.restoreDeletedForm(formUuid, companyUuid);
 
-        log.info("Form {} restored from trash for company {}", formUuid, currentCompanyUuid);
+        log.info("Form {} restored from trash for company {}", formUuid, companyUuid);
 
         return getForm(formUuid);
     }
@@ -289,7 +292,7 @@ public class FormService {
     /**
      * Updates name or/and description of Form by form uuid
      *
-     * @param formInfoDto    form info
+     * @param formInfoDto form info
      * @return form metadata
      */
     @Transactional
@@ -334,7 +337,7 @@ public class FormService {
     /**
      * Updates form columns
      *
-     * @param formUuid form uuid
+     * @param formUuid       form uuid
      * @param formColumnDtos form columns to update
      * @return form metadata
      */

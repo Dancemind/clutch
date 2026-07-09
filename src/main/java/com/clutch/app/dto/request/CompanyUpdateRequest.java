@@ -1,0 +1,9 @@
+package com.clutch.app.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record CompanyUpdateRequest(
+        @NotBlank(message = "Company name is required")
+        String name
+) {
+}

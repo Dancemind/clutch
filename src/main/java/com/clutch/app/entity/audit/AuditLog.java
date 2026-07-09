@@ -1,6 +1,6 @@
 package com.clutch.app.entity.audit;
 
-import com.clutch.app.entity.BaseEntity;
+import com.clutch.app.entity.CompanyBaseEntity;
 import com.clutch.app.enums.AuditAction;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuditLog extends BaseEntity {
+public class AuditLog extends CompanyBaseEntity {
 
     @Column(name = "clutch_uuid", nullable = false)
     private UUID rowUuid;

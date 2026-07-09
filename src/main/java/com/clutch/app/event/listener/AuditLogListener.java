@@ -22,7 +22,7 @@ public class AuditLogListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRowChangedEvent(RowChangedEvent event) {
-        ScopedValue.where(TenantContext.COMPANY_UUID, event.companyUuid()).run(() -> {
+        TenantContext.runWithTenant(event.companyUuid(), () -> {
             AuditLog log = AuditLog.builder()
                     .rowUuid(event.rowUuid())
                     .action(event.action())

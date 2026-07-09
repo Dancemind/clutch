@@ -28,7 +28,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RowData extends BaseEntity {
+public class RowData extends CompanyBaseEntity {
 
     @Column(name = "form_uuid", nullable = false)
     private UUID formUuid;

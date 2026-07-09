@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260706-01" author="Sas">
+        <insert tableName="companies">
+            <column name="uuid" value="5757e70a-1d14-4500-8000-0000005757e7"/>
+            <column name="name" value="SYSTEM_INTERNAL_COMPANY"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

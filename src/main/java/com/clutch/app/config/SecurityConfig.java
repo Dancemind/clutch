@@ -1,33 +1,57 @@
 package com.clutch.app.config;
 
-
+import com.clutch.app.security.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // @PreAuthorize
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    // заглушка
+    private final TenantFilter tenantFilter;
+    private final CustomOAuth2UserService oauth2UserService;
+    private final MyJwtOAuth2SuccessHandler myJwtOAuth2SuccessHandler;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
-                .csrf(csrf -> csrf.disable()) // в 2026 для stateless API это норма
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll() // публичные эндпоинты
-//                        .anyRequest().authenticated()
-                                .anyRequest().permitAll()
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // регистрируем наш магический мост между Security и Scoped Values
-                .addFilterAfter(new TenantFilter(), UsernamePasswordAuthenticationFilter.class);
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/login", "/error", "/api/v1/auth/**", "/oauth2/**",
+                                "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("SYSTEM_ADMIN")
+                        .requestMatchers("/api/v1/management/**").hasAnyRole("SYSTEM_ADMIN", "COMPANY_ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+                        .successHandler(myJwtOAuth2SuccessHandler)
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                )
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-}
 
+}

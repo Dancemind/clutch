@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260726-01" author="Sas">
+
+        <createTable tableName="users">
+            <column name="uuid" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="TEXT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="TEXT"/>
+            <column name="role" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+        </createTable>
+
+    </changeSet>
+</databaseChangeLog>

@@ -1,6 +1,7 @@
 package com.clutch.app.service;
 
 import com.clutch.app.config.TenantContext;
+import jakarta.annotation.PreDestroy;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,16 +19,21 @@ public class SystemTaskService {
 
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
-    public Future<?> runAsSystem(@NotNull Runnable task) {
+    public Future<?> run(@NotNull Runnable task) {
         return executor.submit(() -> {
             try {
-                ScopedValue
-                        .where(TenantContext.COMPANY_UUID, TenantContext.SYSTEM_UUID)
-                        .run(task);
+                TenantContext.runAsSystem(task);
             } catch (Throwable throwable) {
                 log.error("Critical error in system task execution", throwable);
                 throw throwable;
             }
         });
     }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("Shutting down SystemTaskService virtual thread executor...");
+        executor.shutdown();
+    }
+
 }

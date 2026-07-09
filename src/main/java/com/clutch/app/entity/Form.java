@@ -24,7 +24,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Form extends BaseEntity {
+public class Form extends CompanyBaseEntity {
 
     @Column(name = "name", nullable = false, length = 128)
     private String name;
@@ -33,6 +33,7 @@ public class Form extends BaseEntity {
     @JoinColumn(name = "project_uuid", nullable = false)
     private Project project;
 
+    @Column(name = "project_uuid", insertable = false, updatable = false, nullable = false)
     private UUID projectUuid;
 
     @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -46,9 +47,5 @@ public class Form extends BaseEntity {
     private Boolean isActive = true;
 
     private OffsetDateTime deletedAt;
-
-    public boolean isDeleted() {
-        return deletedAt != null;
-    }
 
 }

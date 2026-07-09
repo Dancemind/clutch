@@ -15,7 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ValidationRule extends BaseEntity {
+public class ValidationRule extends CompanyBaseEntity {
     @Column(name = "form_uuid", nullable = false)
     private UUID formUuid;
 

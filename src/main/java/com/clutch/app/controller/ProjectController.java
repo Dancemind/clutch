@@ -6,6 +6,7 @@ import com.clutch.app.mappers.ClutchMapper;
 import com.clutch.app.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +28,7 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
+    @PreAuthorize("hasRole('FINANCE') or hasRole('ADMIN')")
     public ProjectDto createProject(@RequestBody ProjectCreateDto projectCreateDto) {
         return clutchMapper.toProjectDto(
                 projectService.addProject(projectCreateDto.name(), projectCreateDto.description())
@@ -34,6 +36,7 @@ public class ProjectController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('COMPANY_ADMIN')")
     public ProjectDto getProjectByUuid(@RequestParam("id") UUID uuid) {
         return clutchMapper.toProjectDto(
                 projectService.getProjectByUuid(uuid)

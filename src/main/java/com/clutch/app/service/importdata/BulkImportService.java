@@ -6,7 +6,6 @@ import com.clutch.app.service.FormColumnService;
 import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.service.ValidationService;
 import com.clutch.app.service.VarHandleMappingService;
-import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
@@ -46,10 +45,10 @@ public class BulkImportService {
      *                 "Name"      -> "Pork fat"
      *                 "Quantity"  -> 150
      *                 "Price"     -> 13
-     * @throws ValidationException validation exception
      */
-    public void importDataPgCopy(UUID formUuid, List<Map<String, Object>> rows) throws ValidationException {
-        UUID companyUuid = TenantContext.get();
+    public void importDataPgCopy(UUID formUuid, List<Map<String, Object>> rows) {
+        UUID companyUuid = TenantContext.get()
+                .orElseThrow(() -> new IllegalStateException("Security violation: Tenant context is missing"));
 
         Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
         Map<String, UUID> columnNameToColumnId = mapColumnNameToUserKey(definition);
