@@ -2,6 +2,7 @@ package com.clutch.app.service;
 
 import com.clutch.app.entity.BaseEntity;
 import com.clutch.app.exceptions.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public abstract class BaseService<T extends BaseEntity, UUID> {

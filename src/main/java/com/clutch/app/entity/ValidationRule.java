@@ -20,15 +20,15 @@ public class ValidationRule extends CompanyBaseEntity {
     private UUID formUuid;
 
     @Column(name = "target_column", nullable = false, length = 10)
-    private String targetColumn; // Ссылка на физическую колонку, например "d_1"
+    private String targetColumn; // RowData (clutch) column, for ex. "d_1"
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rule_type", nullable = false)
     private RuleType ruleType;
 
     @Column(name = "rule_value")
-    private String ruleValue;    // Значение для проверки: "0", "^[0-9]+$"
+    private String ruleValue;    // rule: "0", "^[0-9]+$"
 
     @Column(name = "message")
-    private String message;      // Текст ошибки для пользователя
+    private String errorMessage;
 }

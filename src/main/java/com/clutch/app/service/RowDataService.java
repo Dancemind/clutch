@@ -1,7 +1,6 @@
 package com.clutch.app.service;
 
 import com.clutch.app.dto.RowDto;
-import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.dto.response.form.FormColumnDto;
 import com.clutch.app.dto.response.form.FormDto;
 import com.clutch.app.dto.response.form.FormRowDto;
@@ -9,9 +8,7 @@ import com.clutch.app.entity.Form;
 import com.clutch.app.entity.RowData;
 import com.clutch.app.enums.AuditAction;
 import com.clutch.app.event.RowChangedEvent;
-import com.clutch.app.exceptions.ResourceNotFoundException;
 import com.clutch.app.repository.RowDataRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,12 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static java.util.Objects.isNull;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FormDataService extends BaseService<RowData, UUID> {
+public class RowDataService extends BaseService<RowData, UUID> {
 
     private final RowDataRepository rowDataRepository;
     private final ValidationService validationService;
@@ -65,7 +60,6 @@ public class FormDataService extends BaseService<RowData, UUID> {
         formService.validateEntity(formUuid);
 
         Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
         List<RowData> entitiesToSave = rows.stream()
                 .map(rowDto -> {
@@ -76,7 +70,7 @@ public class FormDataService extends BaseService<RowData, UUID> {
                             .build();
 
                     mappingService.mapToEntity(rowDto.fieldsData(), newRow, definition);
-                    validationService.validate(newRow, rules);
+                    validationService.validateRowData(formUuid, newRow);
 
                     return newRow;
                 })
@@ -103,10 +97,6 @@ public class FormDataService extends BaseService<RowData, UUID> {
         Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
 
         Form form = formService.getForm(formUuid);
-
-        if (isNull(form)) {
-            throw new EntityNotFoundException("Form metadata not found");
-        }
 
         List<FormColumnDto> formColumnsMetadata = formColumnService.getColumnsMetadataByFormId(formUuid).stream()
                 .map(columnMD ->
@@ -151,13 +141,11 @@ public class FormDataService extends BaseService<RowData, UUID> {
      */
     @Transactional
     public RowDto updateRowData(UUID rowUuid, RowDto rowDto) {
-        RowData existingRow = rowDataRepository.findByUuid(rowUuid)
-                .orElseThrow(() -> new ResourceNotFoundException("Row not found: %s".formatted(rowUuid)));
+        RowData existingRow = super.getByIdOrThrow(rowUuid);
 
         UUID formUuid = existingRow.getFormUuid();
 
         Map<UUID, String> definition = formColumnService.getIdToTargetColumnMapping(formUuid);
-        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
         // data snapshot before changes
         Map<String, Object> oldSnapshot = mappingService.mapFromEntity(existingRow, definition).fieldsData().stream()
@@ -166,7 +154,7 @@ public class FormDataService extends BaseService<RowData, UUID> {
         // update existing row
         mappingService.mapToEntity(rowDto.fieldsData(), existingRow, definition);
 
-        validationService.validate(existingRow, rules);
+        validationService.validateRowData(formUuid, existingRow);
 
         // if someone changed the same row data in parallel we expect to see ObjectOptimisticLockingFailureException
         RowData updatedRow = rowDataRepository.save(existingRow);

@@ -2,7 +2,7 @@ package com.clutch.app.controller;
 
 import com.clutch.app.dto.RowDto;
 import com.clutch.app.dto.response.form.FormDto;
-import com.clutch.app.service.FormDataService;
+import com.clutch.app.service.RowDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FormDataController {
 
-    private final FormDataService formDataService;
+    private final RowDataService rowDataService;
 
     /**
      * Adds rows (data by columns)
@@ -32,7 +32,7 @@ public class FormDataController {
     @PostMapping("forms/{formUuid}/rows")
     public List<RowDto> addRows(@PathVariable UUID formUuid,
                                 @RequestBody List<RowDto> rows) {
-        return formDataService.createRows(formUuid, rows);
+        return rowDataService.createRows(formUuid, rows);
     }
 
     /**
@@ -43,7 +43,7 @@ public class FormDataController {
      */
     @GetMapping("forms/{formUuid}/rows")
     public FormDto getFormData(@PathVariable UUID formUuid) {
-        return formDataService.getFormData(formUuid);
+        return rowDataService.getFormData(formUuid);
     }
 
     /**
@@ -56,7 +56,7 @@ public class FormDataController {
     @PatchMapping("rows/{rowUuid}")
     public RowDto updateRow(@PathVariable UUID rowUuid,
                             @RequestBody RowDto rowDto) {
-        return formDataService.updateRowData(rowUuid, rowDto);
+        return rowDataService.updateRowData(rowUuid, rowDto);
     }
 
 }

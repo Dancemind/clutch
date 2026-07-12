@@ -6,6 +6,7 @@ import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.dto.response.form.FormColumnDto;
 import com.clutch.app.enums.FieldType;
 import com.clutch.app.mappers.ClutchMapper;
+import com.clutch.app.service.FormColumnService;
 import com.clutch.app.service.FormService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class FormController {
 
     private final FormService formService;
+    private final FormColumnService formColumnService;
     private final ClutchMapper clutchMapper;
 
     /**
@@ -114,7 +116,7 @@ public class FormController {
     public FormMetadataDto updateFormColumn(@PathVariable UUID formUuid,
                                             @PathVariable UUID columnUuid,
                                             @RequestBody FormColumnDto formColumnDto) {
-        return formService.updateFormColumn(formUuid, columnUuid, formColumnDto);
+        return formColumnService.updateFormColumn(formUuid, columnUuid, formColumnDto);
     }
 
     /**

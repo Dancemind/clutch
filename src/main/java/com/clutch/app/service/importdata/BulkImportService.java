@@ -3,7 +3,6 @@ package com.clutch.app.service.importdata;
 import com.clutch.app.config.TenantContext;
 import com.clutch.app.entity.RowData;
 import com.clutch.app.service.FormColumnService;
-import com.clutch.app.dto.ValidationRuleDto;
 import com.clutch.app.service.ValidationService;
 import com.clutch.app.service.VarHandleMappingService;
 import lombok.RequiredArgsConstructor;
@@ -55,9 +54,8 @@ public class BulkImportService {
         Map<String, UUID> userKeyToColumnId = formColumnService.getUserKeyToColumnIdMapping(formUuid);
 
         List<Map<UUID, Object>> newRows = new ArrayList<>(rows.size());
-        List<ValidationRuleDto> rules = formColumnService.getValidationRules(formUuid);
 
-        mapUserKeyToColumnIdAndValidate(formUuid, definition, rules, rows, userKeyToColumnId, newRows);
+        mapUserKeyToColumnIdAndValidate(formUuid, definition, rows, userKeyToColumnId, newRows);
 
         // create copy query
         List<String> targetColumns = new ArrayList<>(definition.values());
@@ -148,7 +146,6 @@ public class BulkImportService {
 
     private void mapUserKeyToColumnIdAndValidate(UUID formUuid,
                                                  Map<UUID, String> definition,
-                                                 List<ValidationRuleDto> rules,
                                                  List<Map<String, Object>> rows,
                                                  Map<String, UUID> userKeyToColumnId,
                                                  List<Map<UUID, Object>> newRows) {
@@ -170,7 +167,7 @@ public class BulkImportService {
             RowData rowData = new RowData();
             rowData.setFormUuid(formUuid);
             mappingService.mapToEntity(newRow, rowData, definition);
-            validationService.validate(rowData, rules);
+            validationService.validateRowData(formUuid, rowData);
         }
     }
 

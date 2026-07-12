@@ -6,7 +6,7 @@ import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.dto.RowDto;
 import com.clutch.app.dto.response.form.FormDto;
 import com.clutch.app.enums.FieldType;
-import com.clutch.app.service.FormDataService;
+import com.clutch.app.service.RowDataService;
 import com.clutch.app.service.FormService;
 import jakarta.xml.bind.ValidationException;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
 
     @Autowired
-    private FormDataService formDataService;
+    private RowDataService rowDataService;
 
     @Autowired
     private FormService formService;
@@ -44,11 +44,11 @@ class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
 
 
         // 2. Act
-        List<RowDto> createdRows = formDataService.createRows(formMetadata.formUuid(), rowsToCreate);
+        List<RowDto> createdRows = rowDataService.createRows(formMetadata.formUuid(), rowsToCreate);
 
 
         // 3. Assert
-        FormDto formResult = formDataService.getFormData(formMetadata.formUuid());
+        FormDto formResult = rowDataService.getFormData(formMetadata.formUuid());
 
         assertThat(formResult.uuid()).isEqualTo(formMetadata.formUuid().toString());
         assertThat(formResult.rows()).hasSameSizeAs(rowsToCreate);
