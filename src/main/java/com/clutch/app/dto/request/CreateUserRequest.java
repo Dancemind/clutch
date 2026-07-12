@@ -8,16 +8,19 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CreateUserRequest(
-        @NotBlank
-        @Email
+        @NotBlank(message = "Email is mandatory")
+        @Email(message = "Invalid email format")
         String email,
 
         String password,
 
-        @NotNull
+        @NotNull(message = "Role is mandatory")
         Role role,
 
-        @NotNull
-        UUID companyUuid
+        @NotNull(message = "Company is mandatory")
+        UUID companyUuid,
+
+        @NotNull(message = "Please set provider")
+        Boolean googleProvider
 ) {
 }

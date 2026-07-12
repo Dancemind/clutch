@@ -38,10 +38,14 @@ public class UserService {
     }
 
     public User registerUser(CreateUserRequest request) {
+        if (!request.googleProvider() && !StringUtils.hasText(request.password())) {
+            throw new IllegalArgumentException("Please provide password");
+        }
 
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already registered");
         }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = (authentication != null)
                 ? authentication.getAuthorities()

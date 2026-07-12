@@ -9,7 +9,6 @@ import com.clutch.app.exceptions.IllegalArgumentException;
 import com.clutch.app.exceptions.ResourceNotFoundException;
 import com.clutch.app.mappers.ClutchMapper;
 import com.clutch.app.repository.FormColumnRepository;
-import com.clutch.app.repository.ValidationRuleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -35,7 +34,6 @@ public class FormColumnService extends BaseService<FormColumn, UUID> {
     private static final Pattern COLUMN_PATTERN = Pattern.compile("^([a-z]+_)(\\d+)$");
 
     private final FormColumnRepository formColumnRepository;
-    private final FormService formService;
     private final ClutchMapper clutchMapper;
 
     @Override
@@ -54,8 +52,6 @@ public class FormColumnService extends BaseService<FormColumn, UUID> {
 
     @Cacheable(value = "formColumnIdTargetColumn", key = "#formUuid")
     public Map<UUID, String> getIdToTargetColumnMapping(UUID formUuid) {
-        formService.validateEntity(formUuid);
-
         return formColumnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUuid,
@@ -65,9 +61,6 @@ public class FormColumnService extends BaseService<FormColumn, UUID> {
 
     @Cacheable(value = "formUserKeyColumnId", key = "#formUuid")
     public Map<String, UUID> getUserKeyToColumnIdMapping(UUID formUuid) {
-        formService.validateEntity(formUuid);
-
-
         return formColumnRepository.findAllByFormUuid(formUuid).stream()
                 .collect(Collectors.toMap(
                         FormColumn::getUserKey,
