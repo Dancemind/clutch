@@ -33,10 +33,6 @@ public class Project extends CompanyBaseEntity {
     @Column(name = "name", nullable = false, length = 128)
     private String name;
 
-    @OneToMany(mappedBy = "project")
-    @Builder.Default
-    private List<Form> forms = new ArrayList<>();
-
     @ManyToMany
     @JoinTable(
             name = "project_users",

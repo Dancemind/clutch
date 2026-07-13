@@ -42,7 +42,11 @@ public class FormController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'COMPANY_ADMIN')")
     public FormMetadataDto createFormAndColumns(@RequestBody FormMetadataDto formMetadata) {
-        return formService.createForm(formMetadata.name(), formMetadata.description(), formMetadata.fields());
+        return formService.createForm(
+                formMetadata.name(),
+                formMetadata.description(),
+                formMetadata.projectUuid(),
+                formMetadata.fields());
     }
 
     /**

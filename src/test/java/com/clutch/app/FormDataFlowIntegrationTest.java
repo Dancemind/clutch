@@ -5,10 +5,11 @@ import com.clutch.app.dto.FormFieldDto;
 import com.clutch.app.dto.FormMetadataDto;
 import com.clutch.app.dto.RowDto;
 import com.clutch.app.dto.response.form.FormDto;
+import com.clutch.app.entity.Project;
 import com.clutch.app.enums.FieldType;
+import com.clutch.app.service.ProjectService;
 import com.clutch.app.service.RowDataService;
 import com.clutch.app.service.FormService;
-import jakarta.xml.bind.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,13 @@ class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
     @Autowired
     private FormService formService;
 
+    @Autowired
+    private ProjectService projectService;
+
     @Test
     @Transactional
-    void createRows_retrieveThemSuccessfully() throws ValidationException {
+    void createRows_retrieveThemSuccessfully() {
 
-        // 1. Arrange
         FormMetadataDto formMetadata = createTestFormMetadata();
         UUID nameCol = getFieldUuid(formMetadata, "name");
         UUID sizeCol = getFieldUuid(formMetadata, "size");
@@ -43,11 +46,9 @@ class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
         );
 
 
-        // 2. Act
         List<RowDto> createdRows = rowDataService.createRows(formMetadata.formUuid(), rowsToCreate);
 
 
-        // 3. Assert
         FormDto formResult = rowDataService.getFormData(formMetadata.formUuid());
 
         assertThat(formResult.uuid()).isEqualTo(formMetadata.formUuid().toString());
@@ -62,12 +63,13 @@ class FormDataFlowIntegrationTest extends BaseServiceIntegrationTest {
     }
 
     private FormMetadataDto createTestFormMetadata() {
+        Project project = projectService.addProject("project name", "description");
         List<FormFieldDto> fields = List.of(
                 new FormFieldDto(null, "name", FieldType.TEXT, 1),
                 new FormFieldDto(null, "size", FieldType.NUMBER, 2),
                 new FormFieldDto(null, "price", FieldType.MONEY, 3)
         );
-        return formService.createForm("valenki", "vidy valenkov", fields);
+        return formService.createForm("valenki", "vidy valenkov", project.getUuid(), fields);
     }
 
     private UUID getFieldUuid(FormMetadataDto metadata, String fieldName) {

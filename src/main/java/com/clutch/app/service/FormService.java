@@ -60,11 +60,12 @@ public class FormService extends BaseService<Form, UUID> {
      *
      * @param name        form name
      * @param description form description
+     * @param projectUuid project id
      * @param fields      form fields, can be empty
      * @return form metadata
      */
     @Transactional
-    public FormMetadataDto createForm(String name, String description, List<FormFieldDto> fields) {
+    public FormMetadataDto createForm(String name, String description, UUID projectUuid, List<FormFieldDto> fields) {
 
         checkQuota();
 
@@ -72,6 +73,7 @@ public class FormService extends BaseService<Form, UUID> {
                 Form.builder()
                         .name(name)
                         .description(description)
+                        .projectUuid(projectUuid)
                         .build()
         );
 

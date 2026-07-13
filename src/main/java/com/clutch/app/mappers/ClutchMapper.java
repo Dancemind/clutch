@@ -49,6 +49,7 @@ public interface ClutchMapper {
 
     default FormMetadataDto toFormMetadataDto(Form form, List<FormColumn> formColumns) {
         return new FormMetadataDto(
+                form.getProjectUuid(),
                 form.getUuid(),
                 form.getName(),
                 form.getDescription(),
